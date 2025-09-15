@@ -227,9 +227,10 @@ function VendorDialog({
   expenseOptions,
 }: {
   title: string;
-  onSubmit: (v: Vendor) => void;
+  onSubmit: (v: StoreVendor) => void;
   expenseOptions: ExpenseAccountOption[];
 }) {
+  const { vendorTypes } = useExpense();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -240,15 +241,28 @@ function VendorDialog({
   const [legalType, setLegalType] = useState("");
   const [vendorTypeId, setVendorTypeId] = useState("");
   const [accountType, setAccountType] = useState("");
-  const [oneTime, setOneTime] = useState(false);
+  const [frequency, setFrequency] = useState<"One Time" | "Recurring">("Recurring");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [expenseAccounts, setExpenseAccounts] = useState<string[]>([]);
+
+  // Compliance
+  const [isGstRegistered, setIsGstRegistered] = useState(false);
+  const [gstin, setGstin] = useState("");
+  const [nonGstDoc, setNonGstDoc] = useState<File | null>(null);
+  const [pan, setPan] = useState("");
+  const [tan, setTan] = useState("");
+  const [tdsSection, setTdsSection] = useState("");
+  const [isMsme, setIsMsme] = useState(false);
+  const [msmeNumber, setMsmeNumber] = useState("");
+  const [msmeDoc, setMsmeDoc] = useState<File | null>(null);
+
   const [bank, setBank] = useState<BankAccount[]>([emptyBank()]);
 
   const save = () => {
-    if (!name.trim() || !email.trim() || !phone.trim() || !accountType) return;
-    const vendor: Vendor = {
+    if (!name.trim() || !email.trim() || !phone.trim()) return;
+    if (isGstRegistered && !gstin.trim() && !nonGstDoc) return;
+    const vendor: StoreVendor = {
       id: generateId(),
       name: name.trim(),
       email: email.trim(),
@@ -259,13 +273,24 @@ function VendorDialog({
       active: true,
       legalType: legalType || undefined,
       vendorTypeId: vendorTypeId || undefined,
-      accountType,
+      accountType: accountType || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
-      oneTime,
+      oneTime: frequency === "One Time",
       expenseAccounts,
-      compliance: {},
-      documents: {},
+      compliance: {
+        isGstRegistered: isGstRegistered || undefined,
+        gstin: gstin || undefined,
+        pan: pan || undefined,
+        tan: tan || undefined,
+        tdsSection: tdsSection || undefined,
+        msme: isMsme || undefined,
+        msmeNumber: isMsme ? msmeNumber || undefined : undefined,
+      },
+      documents: {
+        nonGstDocName: nonGstDoc?.name,
+        msmeDocName: msmeDoc?.name,
+      },
       bank,
     };
     onSubmit(vendor);
@@ -279,10 +304,19 @@ function VendorDialog({
     setLegalType("");
     setVendorTypeId("");
     setAccountType("");
-    setOneTime(false);
+    setFrequency("Recurring");
     setStartDate("");
     setEndDate("");
     setExpenseAccounts([]);
+    setIsGstRegistered(false);
+    setGstin("");
+    setNonGstDoc(null);
+    setPan("");
+    setTan("");
+    setTdsSection("");
+    setIsMsme(false);
+    setMsmeNumber("");
+    setMsmeDoc(null);
     setBank([emptyBank()]);
   };
 
@@ -332,23 +366,9 @@ function VendorDialog({
                     <SelectValue placeholder="Select Vendor Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Vendor types are user-defined; show id for now */}
-                    {vendorTypeId ? (
-                      <SelectItem value={vendorTypeId}>{vendorTypeId}</SelectItem>
-                    ) : null}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Account Type *</Label>
-                <Select value={accountType} onValueChange={setAccountType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Account Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
+                    {vendorTypes.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -367,6 +387,22 @@ function VendorDialog({
 
           <Section title="Banking Info">
             <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Account Type">
+                  <Select value={accountType} onValueChange={setAccountType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Account Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
               {bank.map((b, idx) => (
                 <div key={b.id} className="rounded-md border p-4">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -401,10 +437,17 @@ function VendorDialog({
 
           <Section title="Settings">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex items-center gap-2">
-                <Checkbox id="v-onetime" checked={oneTime} onCheckedChange={(v) => setOneTime(Boolean(v))} />
-                <Label htmlFor="v-onetime">Vendor Type: One-time (no ledger)</Label>
-              </div>
+              <Field label="Vendor Frequency">
+                <Select value={frequency} onValueChange={(v) => setFrequency(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="One Time">One Time</SelectItem>
+                    <SelectItem value="Recurring">Recurring</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field label="Start Date">
                 <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </Field>
@@ -441,6 +484,64 @@ function VendorDialog({
             </div>
           </Section>
 
+          <Section title="Compliance Info">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-2">
+                <Checkbox id="v-gst" checked={isGstRegistered} onCheckedChange={(v) => setIsGstRegistered(Boolean(v))} />
+                <Label htmlFor="v-gst">Is GST Registered?</Label>
+              </div>
+              {isGstRegistered && (
+                <>
+                  <Field label="GSTIN or Non-GST Document">
+                    <Input placeholder="GSTIN" value={gstin} onChange={(e) => setGstin(e.target.value)} />
+                  </Field>
+                  <div className="sm:col-span-2 grid gap-2">
+                    <Label>Non-GST Document</Label>
+                    <FileBox onChange={setNonGstDoc} />
+                  </div>
+                </>
+              )}
+              <Field label="PAN Number">
+                <Input value={pan} onChange={(e) => setPan(e.target.value)} />
+              </Field>
+              <Field label="TAN Number">
+                <Input value={tan} onChange={(e) => setTan(e.target.value)} />
+              </Field>
+              <Field label="TDS Section Code">
+                <Input value={tdsSection} onChange={(e) => setTdsSection(e.target.value)} />
+              </Field>
+              <Field label="Vendor Legal Type">
+                <Select value={legalType} onValueChange={setLegalType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEGAL_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <div className="flex items-center gap-2">
+                <Checkbox id="v-msme" checked={isMsme} onCheckedChange={(v) => setIsMsme(Boolean(v))} />
+                <Label htmlFor="v-msme">Is MSME?</Label>
+              </div>
+              {isMsme && (
+                <>
+                  <Field label="MSME Number">
+                    <Input value={msmeNumber} onChange={(e) => setMsmeNumber(e.target.value)} />
+                  </Field>
+                  <div className="sm:col-span-2 grid gap-2">
+                    <Label>MSME Document</Label>
+                    <FileBox onChange={setMsmeDoc} />
+                  </div>
+                </>
+              )}
+            </div>
+          </Section>
+
           <div className="flex justify-end gap-3">
             <Button onClick={save}>Save</Button>
           </div>
@@ -456,6 +557,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">{title}</h3>
       <div className="rounded-lg border bg-white p-4">{children}</div>
     </section>
+  );
+}
+function FileBox({ onChange }: { onChange: (file: File | null) => void }) {
+  return (
+    <label className="grid h-28 place-items-center rounded-md border-2 border-dashed text-sm text-muted-foreground">
+      <div className="pointer-events-none select-none text-center">
+        <div className="font-medium text-foreground">Upload</div>
+      </div>
+      <input type="file" className="hidden" onChange={(e) => onChange(e.target.files?.[0] || null)} />
+    </label>
   );
 }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
