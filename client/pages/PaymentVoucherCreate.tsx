@@ -353,19 +353,6 @@ export default function PaymentVoucherCreate() {
               </div>
             </section>
 
-            <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Step 6: Date & Document</h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2 grid gap-2">
-                  <Label>Payment Document</Label>
-                  <FileBox onChange={setFile} />
-                </div>
-                <div className="sm:col-span-2 grid gap-2">
-                  <Label>Description</Label>
-                  <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Type here" />
-                </div>
-              </div>
-            </section>
           </div>
         </div>
       </div>
