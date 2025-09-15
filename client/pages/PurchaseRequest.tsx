@@ -16,6 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Table,
   TableBody,
@@ -247,28 +256,27 @@ function EditPR({
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field label="Unit To Measure *">
-                      <Select
-                        value={it.uom}
-                        onValueChange={(v) =>
-                          updateItem(setItems, idx, { uom: v })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Count" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UOMS.map((u) => (
-                            <SelectItem key={u} value={u}>
-                              {u}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                    {it.type === "Goods" && (
+                      <Field label="Unit of Measure *">
+                        <Select
+                          value={it.uom}
+                          onValueChange={(v) => updateItem(setItems, idx, { uom: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UOMS.map((u) => (
+                              <SelectItem key={u} value={u}>
+                                {u}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
                     <Field label="Quantity *">
                       <Input
-                        type="number"
                         value={it.qty}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -283,7 +291,6 @@ function EditPR({
                     </Field>
                     <Field label="Unit Price *">
                       <Input
-                        type="number"
                         value={it.unitPrice}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -297,28 +304,20 @@ function EditPR({
                       />
                     </Field>
                     <Field label="Total Price *">
-                      <Input type="number" value={it.total} readOnly />
+                      <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <Input
+                      <PercentCombobox
                         value={it.tdsRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            tdsRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
+                        options={["1", "2"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
                       />
                     </Field>
                     <Field label="GST %">
-                      <Input
+                      <PercentCombobox
                         value={it.gstRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            gstRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
+                        options={["5", "8", "12"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}
                       />
                     </Field>
                     <Field label="GST Amount">
@@ -380,6 +379,15 @@ function EditPR({
   );
 }
 
+const PO_CONFIG = { prefix: "PO", seqLength: 5 } as const;
+function nextPONumber(year: number) {
+  const key = `po-seq-${year}`;
+  const cur = Number(localStorage.getItem(key) || 0) + 1;
+  localStorage.setItem(key, String(cur));
+  const seq = String(cur).padStart(PO_CONFIG.seqLength, "0");
+  return `${PO_CONFIG.prefix}-${year}-${seq}`;
+}
+
 function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -391,14 +399,16 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
       return;
+    const yr = requestDate ? new Date(requestDate).getFullYear() : new Date().getFullYear();
     const pr: PR = {
       id: prNumber(),
       title: title.trim(),
       vendorId,
       requestDate,
       documentName: document?.name,
+      poNumber: nextPONumber(yr),
       items,
-      approved: false,
+      approved: true,
     };
     onSave(pr);
     setOpen(false);
@@ -508,28 +518,27 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field label="Unit To Measure *">
-                      <Select
-                        value={it.uom}
-                        onValueChange={(v) =>
-                          updateItem(setItems, idx, { uom: v })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Count" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UOMS.map((u) => (
-                            <SelectItem key={u} value={u}>
-                              {u}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                    {it.type === "Goods" && (
+                      <Field label="Unit of Measure *">
+                        <Select
+                          value={it.uom}
+                          onValueChange={(v) => updateItem(setItems, idx, { uom: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UOMS.map((u) => (
+                              <SelectItem key={u} value={u}>
+                                {u}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
                     <Field label="Quantity *">
                       <Input
-                        type="number"
                         value={it.qty}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -544,7 +553,6 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     </Field>
                     <Field label="Unit Price *">
                       <Input
-                        type="number"
                         value={it.unitPrice}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -558,28 +566,20 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       />
                     </Field>
                     <Field label="Total Price *">
-                      <Input type="number" value={it.total} readOnly />
+                      <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <Input
+                      <PercentCombobox
                         value={it.tdsRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            tdsRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
+                        options={["1", "2"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
                       />
                     </Field>
                     <Field label="GST %">
-                      <Input
+                      <PercentCombobox
                         value={it.gstRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            gstRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
+                        options={["5", "8", "12"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}
                       />
                     </Field>
                     <Field label="GST Amount">
@@ -729,29 +729,71 @@ function updateQtyPrice(
   qty: number,
   price: number,
 ) {
+  const q = Number.isFinite(qty) ? qty : 0;
+  const p = Number.isFinite(price) ? price : 0;
   setter((s) =>
     s.map((b, i) =>
       i === index
         ? recalc({
             ...b,
-            qty,
-            unitPrice: price,
-            total: Number(qty) * Number(price),
+            qty: q,
+            unitPrice: p,
+            total: q * p,
           })
         : b,
     ),
   );
 }
 function recalc(item: PRItem): PRItem {
-  const base =
-    Number(item.total) ||
-    (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
-  const gstPct = Number(item.gstRate || 0);
-  const tdsPct = Number(item.tdsRate || 0);
+  const toNum = (v: any) => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const totalN = toNum(item.total);
+  const qtyN = toNum(item.qty);
+  const unitN = toNum(item.unitPrice);
+  const base = totalN || qtyN * unitN;
+  const gstPct = toNum(item.gstRate || 0);
+  const tdsPct = toNum(item.tdsRate || 0);
   const gstAmount = base * (gstPct / 100);
   const tdsAmount = base * (tdsPct / 100);
   const payable = base + gstAmount - tdsAmount;
   return { ...item, total: base, gstAmount, tdsAmount, payable };
+}
+
+function PercentCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <div className="relative">
+        <Input
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setOpen(true)}
+          className="pr-8"
+          placeholder="0"
+        />
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">▼</Button>
+        </PopoverTrigger>
+      </div>
+      <PopoverContent align="end" className="p-0 w-56">
+        <Command>
+          <CommandInput placeholder="Search %" />
+          <CommandEmpty>No options</CommandEmpty>
+          <CommandList>
+            <CommandGroup>
+              {options.map((o) => (
+                <CommandItem key={o} onSelect={() => { onChange(o); setOpen(false); }}>
+                  {o}%
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 const VENDORS = [

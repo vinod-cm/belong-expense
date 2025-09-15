@@ -34,6 +34,7 @@ export default function CreateInvoicePage() {
   const [doc, setDoc] = useState<File | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [removedItemIds, setRemovedItemIds] = useState<string[]>([]);
+  const [amounts, setAmounts] = useState<Record<string, number>>({});
 
   const pr = useMemo(() => prs.find((p) => p.id === prId), [prs, prId]);
   const vendor = useMemo(
@@ -56,18 +57,17 @@ export default function CreateInvoicePage() {
   }, [pr, selectedAccounts, removedItemIds]);
 
   const totalSelected = useMemo(() => {
-    return selectedItems.reduce(
-      (s, it) =>
-        s +
-        Number(
-          it.payable ??
-            (Number(it.total) || 0) +
-              (Number(it.total) || 0) * (Number(it.gstRate || 0) / 100) -
-              (Number(it.total) || 0) * (Number(it.tdsRate || 0) / 100),
-        ),
-      0,
-    );
-  }, [selectedItems]);
+    return selectedItems.reduce((s, it) => {
+      const base = Number(it.total) || 0;
+      const gstPct = Number(it.gstRate || 0);
+      const tdsPct = Number(it.tdsRate || 0);
+      const maxAmt = Number(
+        it.payable ?? base + (base * gstPct) / 100 - (base * tdsPct) / 100,
+      );
+      const entered = Number(amounts[it.id] ?? maxAmt);
+      return s + entered;
+    }, 0);
+  }, [selectedItems, amounts]);
 
   const remainingForPR = useMemo(() => {
     if (!pr) return 0;
@@ -75,11 +75,26 @@ export default function CreateInvoicePage() {
     return Math.max(0, remaining);
   }, [pr, invoices]);
 
+  const anyOver = useMemo(() => {
+    return selectedItems.some((it) => {
+      const base = Number(it.total) || 0;
+      const gstPct = Number(it.gstRate || 0);
+      const tdsPct = Number(it.tdsRate || 0);
+      const maxAmt = Number(
+        it.payable ?? base + (base * gstPct) / 100 - (base * tdsPct) / 100,
+      );
+      const entered = Number(amounts[it.id] ?? maxAmt);
+      return entered > maxAmt;
+    });
+  }, [selectedItems, amounts]);
+
   const error = !pr
     ? ""
-    : totalSelected > remainingForPR
-      ? `Invoice exceeds remaining PR amount (₹${remainingForPR.toLocaleString()}).`
-      : "";
+    : anyOver
+      ? "One or more item amounts exceed payable from PR."
+      : totalSelected > remainingForPR
+        ? `Invoice exceeds remaining PR amount (₹${remainingForPR.toLocaleString()}).`
+        : "";
 
   const save = () => {
     if (
@@ -101,15 +116,16 @@ export default function CreateInvoicePage() {
       dueDate,
       description: desc || undefined,
       documentName: doc?.name,
-      items: selectedItems.map((it) => ({
-        prItemId: it.id,
-        amount: Number(
-          it.payable ??
-            (Number(it.total) || 0) +
-              (Number(it.total) || 0) * (Number(it.gstRate || 0) / 100) -
-              (Number(it.total) || 0) * (Number(it.tdsRate || 0) / 100),
-        ),
-      })),
+      items: selectedItems.map((it) => {
+        const base = Number(it.total) || 0;
+        const gstPct = Number(it.gstRate || 0);
+        const tdsPct = Number(it.tdsRate || 0);
+        const maxAmt = Number(
+          it.payable ?? base + (base * gstPct) / 100 - (base * tdsPct) / 100,
+        );
+        const entered = Number(amounts[it.id] ?? maxAmt);
+        return { prItemId: it.id, amount: entered };
+      }),
       total: totalSelected,
     };
     addInvoice(inv);
@@ -251,6 +267,7 @@ export default function CreateInvoicePage() {
                         <TableHead>GST %</TableHead>
                         <TableHead>TDS %</TableHead>
                         <TableHead>Payable Amount (from PR)</TableHead>
+                        <TableHead>Enter Amount</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -275,6 +292,17 @@ export default function CreateInvoicePage() {
                             <TableCell>{gstPct}%</TableCell>
                             <TableCell>{tdsPct}%</TableCell>
                             <TableCell>₹{amt.toLocaleString()}</TableCell>
+                            <TableCell className="max-w-40">
+                              <Input
+                                value={amounts[it.id] ?? amt}
+                                onChange={(e) =>
+                                  setAmounts((s) => ({
+                                    ...s,
+                                    [it.id]: Number(e.target.value),
+                                  }))
+                                }
+                              />
+                            </TableCell>
                             <TableCell className="text-right">
                               <Button
                                 variant="secondary"

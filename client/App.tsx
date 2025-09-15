@@ -11,9 +11,12 @@ import NotFound from "./pages/NotFound";
 import ExpenseSetup from "./pages/ExpenseSetup";
 import VendorTypes from "./pages/VendorTypes";
 import Vendors from "./pages/Vendors";
+import VendorDetails from "./pages/VendorDetails";
+import VendorEdit from "./pages/VendorEdit";
 import PurchaseRequest from "./pages/PurchaseRequest";
 import InvoiceAccounting from "./pages/InvoiceAccounting";
 import PaymentVoucherPage from "./pages/PaymentVoucher";
+import PaymentVoucherCreate from "./pages/PaymentVoucherCreate";
 import PurchaseRequestDetails from "./pages/PurchaseRequestDetails";
 import CreateInvoicePage from "./pages/CreateInvoice";
 import Placeholder from "./pages/Placeholder";
@@ -34,11 +37,14 @@ const App = () => (
             <Route path="/expense/setup" element={<ExpenseSetup />} />
             <Route path="/expense/vendor-types" element={<VendorTypes />} />
             <Route path="/vendors" element={<Vendors />} />
+            <Route path="/vendors/:id" element={<VendorDetails />} />
+            <Route path="/vendors/:id/edit" element={<VendorEdit />} />
             <Route path="/expense/purchase" element={<PurchaseRequest />} />
             <Route path="/expense/purchase/:id" element={<PurchaseRequestDetails />} />
             <Route path="/expense/invoices" element={<InvoiceAccounting />} />
             <Route path="/expense/invoices/create" element={<CreateInvoicePage />} />
             <Route path="/expense/payment" element={<PaymentVoucherPage />} />
+            <Route path="/expense/payment/create" element={<PaymentVoucherCreate />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

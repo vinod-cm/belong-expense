@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface BankAccount {
   id: string;
@@ -113,7 +114,7 @@ export default function Vendors() {
               onChange={(e) => setQ(e.target.value)}
             />
             <CreateVendor
-              onSave={addVendor as (v: Vendor) => void}
+              onSave={addVendor}
               expenseOptions={expenseOptions}
             />
           </div>
@@ -165,12 +166,12 @@ export default function Vendors() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right space-x-3">
-                    <ViewVendor value={v} expenseOptions={expenseOptions} />
-                    <EditVendor
-                      value={v}
-                      onSave={updateVendor as (v: Vendor) => void}
-                      expenseOptions={expenseOptions}
-                    />
+                    <Link to={`/vendors/${v.id}`} className="text-gray-700 hover:underline">
+                      View Details
+                    </Link>
+                    <Link to={`/vendors/${v.id}/edit`} className="text-blue-600 hover:underline">
+                      Edit
+                    </Link>
                     <button
                       className="text-red-600 hover:underline"
                       onClick={() => removeVendor(v.id)}
@@ -208,7 +209,7 @@ function CreateVendor({
   onSave,
   expenseOptions,
 }: {
-  onSave: (v: Vendor) => void;
+  onSave: (v: StoreVendor) => void;
   expenseOptions: ExpenseAccountOption[];
 }) {
   return (
@@ -219,168 +220,133 @@ function CreateVendor({
     />
   );
 }
-function ViewVendor({
-  value,
-  expenseOptions,
-}: {
-  value: Vendor;
-  expenseOptions: ExpenseAccountOption[];
-}) {
-  return (
-    <VendorDialog
-      title="Vendor Details"
-      initial={value}
-      onSubmit={() => {}}
-      expenseOptions={expenseOptions}
-      trigger={
-        <button className="text-gray-600 hover:underline">View Details</button>
-      }
-      readOnly
-    />
-  );
-}
-function EditVendor({
-  value,
-  onSave,
-  expenseOptions,
-}: {
-  value: Vendor;
-  onSave: (v: Vendor) => void;
-  expenseOptions: ExpenseAccountOption[];
-}) {
-  return (
-    <VendorDialog
-      title="Edit Vendor"
-      initial={value}
-      onSubmit={onSave}
-      expenseOptions={expenseOptions}
-      trigger={<button className="text-blue-600 hover:underline">Edit</button>}
-    />
-  );
-}
 
 function VendorDialog({
   title,
   onSubmit,
   expenseOptions,
-  initial,
-  trigger,
-  readOnly,
 }: {
   title: string;
-  onSubmit: (v: Vendor) => void;
+  onSubmit: (v: StoreVendor) => void;
   expenseOptions: ExpenseAccountOption[];
-  initial?: Vendor;
-  trigger?: React.ReactNode;
-  readOnly?: boolean;
 }) {
   const { vendorTypes } = useExpense();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState(initial?.name || "");
-  const [email, setEmail] = useState(initial?.email || "");
-  const [phone, setPhone] = useState(initial?.phone || "");
-  const [notes, setNotes] = useState(initial?.notes || "");
-  const [address, setAddress] = useState(initial?.address || "");
-  const [state, setState] = useState(initial?.state || "");
-  const [active, setActive] = useState(initial?.active ?? true);
-  const [legalType, setLegalType] = useState(initial?.legalType || "");
-  const [vendorTypeId, setVendorTypeId] = useState(initial?.vendorTypeId || "");
-  const [accountType, setAccountType] = useState(initial?.accountType || "");
-  const [oneTime, setOneTime] = useState(initial?.oneTime ?? false);
-  const [startDate, setStartDate] = useState(initial?.startDate || "");
-  const [endDate, setEndDate] = useState(initial?.endDate || "");
-  const [expenseAccounts, setExpenseAccounts] = useState<string[]>(
-    initial?.expenseAccounts || [],
-  );
-  const [compliance, setCompliance] = useState<Vendor["compliance"]>(
-    initial?.compliance || {},
-  );
-  const [documents, setDocuments] = useState<Vendor["documents"]>(
-    initial?.documents || {},
-  );
-  const [bank, setBank] = useState<BankAccount[]>(
-    initial?.bank || [emptyBank()],
-  );
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [address, setAddress] = useState("");
+  const [state, setState] = useState("");
+  const [legalType, setLegalType] = useState("");
+  const [vendorTypeId, setVendorTypeId] = useState("");
+  const [accountType, setAccountType] = useState("");
+  const [frequency, setFrequency] = useState<"One Time" | "Recurring">("Recurring");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [expenseAccounts, setExpenseAccounts] = useState<string[]>([]);
+
+  // Compliance
+  const [isGstRegistered, setIsGstRegistered] = useState(false);
+  const [gstin, setGstin] = useState("");
+  const [nonGstDoc, setNonGstDoc] = useState<File | null>(null);
+  const [pan, setPan] = useState("");
+  const [tan, setTan] = useState("");
+  const [tdsSection, setTdsSection] = useState("");
+  const [isMsme, setIsMsme] = useState(false);
+  const [msmeNumber, setMsmeNumber] = useState("");
+  const [msmeDoc, setMsmeDoc] = useState<File | null>(null);
+
+  const [bank, setBank] = useState<BankAccount[]>([emptyBank()]);
 
   const save = () => {
-    if (!name.trim() || !email.trim() || !phone.trim() || !accountType) return;
-    const vendor: Vendor = {
-      id: initial?.id || generateId(),
+    if (!name.trim() || !email.trim() || !phone.trim()) return;
+    if (isGstRegistered ? !gstin.trim() : !nonGstDoc) return;
+    const vendor: StoreVendor = {
+      id: generateId(),
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim(),
       notes: notes.trim() || undefined,
       address: address.trim() || undefined,
       state: state || undefined,
-      active,
+      active: true,
       legalType: legalType || undefined,
       vendorTypeId: vendorTypeId || undefined,
-      accountType: accountType,
+      accountType: accountType || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
-      oneTime,
+      oneTime: frequency === "One Time",
       expenseAccounts,
-      compliance,
-      documents,
+      compliance: {
+        isGstRegistered: isGstRegistered || undefined,
+        gstin: gstin || undefined,
+        pan: pan || undefined,
+        tan: tan || undefined,
+        tdsSection: tdsSection || undefined,
+        msme: isMsme || undefined,
+        msmeNumber: isMsme ? msmeNumber || undefined : undefined,
+      },
+      documents: {
+        nonGstDocName: nonGstDoc?.name,
+        msmeDocName: msmeDoc?.name,
+      },
       bank,
     };
     onSubmit(vendor);
     setOpen(false);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setNotes("");
+    setAddress("");
+    setState("");
+    setLegalType("");
+    setVendorTypeId("");
+    setAccountType("");
+    setFrequency("Recurring");
+    setStartDate("");
+    setEndDate("");
+    setExpenseAccounts([]);
+    setIsGstRegistered(false);
+    setGstin("");
+    setNonGstDoc(null);
+    setPan("");
+    setTan("");
+    setTdsSection("");
+    setIsMsme(false);
+    setMsmeNumber("");
+    setMsmeDoc(null);
+    setBank([emptyBank()]);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button>Add Vendor</Button>}
+        <Button>Add Vendor</Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-8">
-          {/* Basic */}
           <Section title="Basic Details">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="v-name">Vendor Name *</Label>
-                <Input
-                  id="v-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Name"
-                  readOnly={readOnly}
-                />
+                <Input id="v-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="v-email">Email *</Label>
-                <Input
-                  required
-                  id="v-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  readOnly={readOnly}
-                />
+                <Input required id="v-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="v-phone">Phone *</Label>
-                <Input
-                  required
-                  id="v-phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Phone"
-                  readOnly={readOnly}
-                />
+                <Input required id="v-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="v-state">State</Label>
-                <Select
-                  value={state}
-                  onValueChange={setState}
-                  disabled={readOnly}
-                >
+                <Select value={state} onValueChange={setState}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select State" />
                   </SelectTrigger>
@@ -395,11 +361,7 @@ function VendorDialog({
               </div>
               <div className="grid gap-2">
                 <Label>Vendor Type</Label>
-                <Select
-                  value={vendorTypeId}
-                  onValueChange={setVendorTypeId}
-                  disabled={readOnly}
-                >
+                <Select value={vendorTypeId} onValueChange={setVendorTypeId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Vendor Type" />
                   </SelectTrigger>
@@ -412,95 +374,143 @@ function VendorDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid gap-2">
-                <Label>Account Type *</Label>
-                <Select
-                  value={accountType}
-                  onValueChange={setAccountType}
-                  disabled={readOnly}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Account Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Address</Label>
-                <Textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Address"
-                  readOnly={readOnly}
-                />
+                <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
               </div>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Notes</Label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Notes"
-                  readOnly={readOnly}
-                />
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes" />
               </div>
             </div>
           </Section>
 
-          {/* Compliance */}
+          <Section title="Banking Info">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Account Type">
+                  <Select value={accountType} onValueChange={setAccountType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Account Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+              {bank.map((b, idx) => (
+                <div key={b.id} className="rounded-md border p-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Bank Name *">
+                      <Input value={b.bankName} onChange={(e) => updateBank(setBank, idx, { bankName: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="Branch Name *">
+                      <Input value={b.branch} onChange={(e) => updateBank(setBank, idx, { branch: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="IFSC Code *">
+                      <Input value={b.ifsc} onChange={(e) => updateBank(setBank, idx, { ifsc: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="Account Holder Name *">
+                      <Input value={b.accHolder} onChange={(e) => updateBank(setBank, idx, { accHolder: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="Account Number *">
+                      <Input value={b.accNo} onChange={(e) => updateBank(setBank, idx, { accNo: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                  </div>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <Button variant="secondary" onClick={() => setBank((s) => s.filter((_, i) => i !== idx))}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button variant="secondary" onClick={() => setBank((s) => [...s, emptyBank()])}>
+                Add Bank Account
+              </Button>
+            </div>
+          </Section>
+
+          <Section title="Settings">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Vendor Frequency">
+                <Select value={frequency} onValueChange={(v) => setFrequency(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="One Time">One Time</SelectItem>
+                    <SelectItem value="Recurring">Recurring</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Start Date">
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </Field>
+              <Field label="End Date">
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </Field>
+              <div className="sm:col-span-2 grid gap-2">
+                <Label>Linked Expense Accounts</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="justify-between w-full">
+                      {expenseAccounts.length > 0
+                        ? expenseAccounts
+                            .map((x) => expenseOptions.find((o) => o.id === x)?.name || x)
+                            .join(", ")
+                        : "Select accounts"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-72">
+                    {expenseOptions.map((opt) => (
+                      <DropdownMenuCheckboxItem
+                        key={opt.id}
+                        checked={expenseAccounts.includes(opt.id)}
+                        onCheckedChange={(checked) =>
+                          setExpenseAccounts((s) => (checked ? [...s, opt.id] : s.filter((x) => x !== opt.id)))
+                        }
+                      >
+                        {opt.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </Section>
+
           <Section title="Compliance Info">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="GSTIN *">
-                <Input
-                  value={compliance.gstin || ""}
-                  onChange={(e) =>
-                    setCompliance({ ...compliance, gstin: e.target.value })
-                  }
-                  placeholder="Type here"
-                  readOnly={readOnly}
-                />
+              <div className="flex items-center gap-2">
+                <Checkbox id="v-gst" checked={isGstRegistered} onCheckedChange={(v) => setIsGstRegistered(Boolean(v))} />
+                <Label htmlFor="v-gst">Is GST Registered?</Label>
+              </div>
+              {isGstRegistered ? (
+                <Field label="GSTIN *">
+                  <Input placeholder="GSTIN" value={gstin} onChange={(e) => setGstin(e.target.value)} />
+                </Field>
+              ) : (
+                <div className="sm:col-span-2 grid gap-2">
+                  <Label>Non-GST Document *</Label>
+                  <FileBox onChange={setNonGstDoc} />
+                </div>
+              )}
+              <Field label="PAN Number">
+                <Input value={pan} onChange={(e) => setPan(e.target.value)} />
               </Field>
-              <Field label="PAN No *">
-                <Input
-                  value={compliance.pan || ""}
-                  onChange={(e) =>
-                    setCompliance({ ...compliance, pan: e.target.value })
-                  }
-                  placeholder="Type here"
-                  readOnly={readOnly}
-                />
+              <Field label="TAN Number">
+                <Input value={tan} onChange={(e) => setTan(e.target.value)} />
               </Field>
-              <Field label="TAN No *">
-                <Input
-                  value={compliance.tan || ""}
-                  onChange={(e) =>
-                    setCompliance({ ...compliance, tan: e.target.value })
-                  }
-                  placeholder="Type here"
-                  readOnly={readOnly}
-                />
+              <Field label="TDS Section Code">
+                <Input value={tdsSection} onChange={(e) => setTdsSection(e.target.value)} />
               </Field>
-              <Field label="TDS Section Code *">
-                <Input
-                  value={compliance.tdsSection || ""}
-                  onChange={(e) =>
-                    setCompliance({ ...compliance, tdsSection: e.target.value })
-                  }
-                  placeholder="Type here"
-                  readOnly={readOnly}
-                />
-              </Field>
-              <Field label="Vendor Legal Type *">
-                <Select
-                  value={legalType}
-                  onValueChange={setLegalType}
-                  disabled={readOnly}
-                >
+              <Field label="Vendor Legal Type">
+                <Select value={legalType} onValueChange={setLegalType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -513,271 +523,57 @@ function VendorDialog({
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="MSME Number">
-                <Input
-                  value={compliance.msmeNumber || ""}
-                  onChange={(e) =>
-                    setCompliance({ ...compliance, msmeNumber: e.target.value })
-                  }
-                  placeholder="Type here"
-                  readOnly={readOnly}
-                />
-              </Field>
-              <div className="sm:col-span-2 grid gap-2">
-                <Label>MSME Document</Label>
-                <FileBox
-                  onChange={(f) =>
-                    setDocuments({ ...documents, registration: f })
-                  }
-                  disabled={readOnly}
-                  valueName={
-                    documents.registration
-                      ? documents.registration.name
-                      : undefined
-                  }
-                />
-              </div>
-            </div>
-          </Section>
-
-          {/* Banking */}
-          <Section title="Banking Info">
-            <div className="space-y-6">
-              {bank.map((b, idx) => (
-                <div key={b.id} className="rounded-md border p-4">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="Bank Name *">
-                      <Input
-                        value={b.bankName}
-                        onChange={(e) =>
-                          updateBank(setBank, idx, { bankName: e.target.value })
-                        }
-                        placeholder="Type Here"
-                        readOnly={readOnly}
-                      />
-                    </Field>
-                    <Field label="Branch Name *">
-                      <Input
-                        value={b.branch}
-                        onChange={(e) =>
-                          updateBank(setBank, idx, { branch: e.target.value })
-                        }
-                        placeholder="Type Here"
-                        readOnly={readOnly}
-                      />
-                    </Field>
-                    <Field label="IFSC Code *">
-                      <Input
-                        value={b.ifsc}
-                        onChange={(e) =>
-                          updateBank(setBank, idx, { ifsc: e.target.value })
-                        }
-                        placeholder="Type Here"
-                        readOnly={readOnly}
-                      />
-                    </Field>
-                    <Field label="Account Holder Name *">
-                      <Input
-                        value={b.accHolder}
-                        onChange={(e) =>
-                          updateBank(setBank, idx, {
-                            accHolder: e.target.value,
-                          })
-                        }
-                        placeholder="Type Here"
-                        readOnly={readOnly}
-                      />
-                    </Field>
-                    <Field label="Account Number *">
-                      <Input
-                        value={b.accNo}
-                        onChange={(e) =>
-                          updateBank(setBank, idx, { accNo: e.target.value })
-                        }
-                        placeholder="Type Here"
-                        readOnly={readOnly}
-                      />
-                    </Field>
-                    <div className="sm:col-span-2 grid gap-2">
-                      <Label>Upload Passbook *</Label>
-                      <FileBox
-                        onChange={(f) => updateBank(setBank, idx, { doc: f })}
-                        disabled={readOnly}
-                        valueName={b.doc ? b.doc.name : undefined}
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        setBank((s) => s.filter((_, i) => i !== idx))
-                      }
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button
-                variant="secondary"
-                onClick={() => setBank((s) => [...s, emptyBank()])}
-              >
-                Add Bank Account
-              </Button>
-            </div>
-          </Section>
-
-          {/* Flags & Links */}
-          <Section title="Settings">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex items-center gap-2">
-                <Checkbox
-                  id="v-active"
-                  checked={active}
-                  onCheckedChange={(v) => setActive(Boolean(v))}
-                />
-                <Label htmlFor="v-active">Mark Vendor as Active</Label>
+                <Checkbox id="v-msme" checked={isMsme} onCheckedChange={(v) => setIsMsme(Boolean(v))} />
+                <Label htmlFor="v-msme">Is MSME?</Label>
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="v-onetime"
-                  checked={oneTime}
-                  onCheckedChange={(v) => setOneTime(Boolean(v))}
-                />
-                <Label htmlFor="v-onetime">
-                  Vendor Type: One-time (no ledger)
-                </Label>
-              </div>
-              <Field label="Start Date">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </Field>
-              <Field label="End Date">
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </Field>
-              <div className="sm:col-span-2 grid gap-2">
-                <Label>Linked Expense Accounts</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="justify-between w-full"
-                      disabled={readOnly}
-                    >
-                      {expenseAccounts.length > 0
-                        ? expenseAccounts
-                            .map(
-                              (x) =>
-                                expenseOptions.find((o) => o.id === x)?.name ||
-                                x,
-                            )
-                            .join(", ")
-                        : "Select accounts"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-72">
-                    {expenseOptions.map((opt) => (
-                      <DropdownMenuCheckboxItem
-                        key={opt.id}
-                        checked={expenseAccounts.includes(opt.id)}
-                        onCheckedChange={(checked) =>
-                          setExpenseAccounts((s) =>
-                            checked
-                              ? [...s, opt.id]
-                              : s.filter((x) => x !== opt.id),
-                          )
-                        }
-                        disabled={readOnly}
-                      >
-                        {opt.name}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {isMsme && (
+                <>
+                  <Field label="MSME Number">
+                    <Input value={msmeNumber} onChange={(e) => setMsmeNumber(e.target.value)} />
+                  </Field>
+                  <div className="sm:col-span-2 grid gap-2">
+                    <Label>MSME Document</Label>
+                    <FileBox onChange={setMsmeDoc} />
+                  </div>
+                </>
+              )}
             </div>
           </Section>
 
-          {!readOnly && (
-            <div className="flex justify-end gap-3">
-              <Button onClick={save}>Save</Button>
-            </div>
-          )}
+          <div className="flex justify-end gap-3">
+            <Button onClick={save}>Save</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">
-        {title}
-      </h3>
+      <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">{title}</h3>
       <div className="rounded-lg border bg-white p-4">{children}</div>
     </section>
   );
 }
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid gap-2">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-function FileBox({
-  onChange,
-  disabled,
-  valueName,
-}: {
-  onChange: (file: File | null) => void;
-  disabled?: boolean;
-  valueName?: string;
-}) {
-  if (disabled) {
-    return (
-      <div className="grid h-28 place-items-center rounded-md border-2 border-dashed text-sm text-muted-foreground">
-        <div className="text-center">
-          <div className="font-medium text-foreground">
-            {valueName || "No file"}
-          </div>
-        </div>
-      </div>
-    );
-  }
+function FileBox({ onChange }: { onChange: (file: File | null) => void }) {
   return (
     <label className="grid h-28 place-items-center rounded-md border-2 border-dashed text-sm text-muted-foreground">
       <div className="pointer-events-none select-none text-center">
         <div className="font-medium text-foreground">Upload</div>
       </div>
-      <input
-        type="file"
-        className="hidden"
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
-      />
+      <input type="file" className="hidden" onChange={(e) => onChange(e.target.files?.[0] || null)} />
     </label>
+  );
+}
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-2">
+      <Label>{label}</Label>
+      {children}
+    </div>
   );
 }
 function emptyBank(): BankAccount {
@@ -802,8 +598,8 @@ function generateId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-const LEGAL_TYPES = ["Company", "Non-company", "Professional"] as const;
-const ACCOUNT_TYPES = ["Goods", "Services", "Expense", "Other"] as const;
+const LEGAL_TYPES = ["Company", "Non-Company", "Professional"] as const;
+const ACCOUNT_TYPES = ["Current", "Savings", "Expense"] as const;
 const STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
