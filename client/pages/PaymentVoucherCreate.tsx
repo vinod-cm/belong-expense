@@ -158,9 +158,6 @@ export default function PaymentVoucherCreate() {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Payment Date *">
-                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                </Field>
               </div>
             </section>
 
