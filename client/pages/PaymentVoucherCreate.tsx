@@ -162,7 +162,7 @@ export default function PaymentVoucherCreate() {
             </section>
 
             <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Step 2: Select Source</h3>
+              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Select Source</h3>
               <div className="flex gap-3 text-sm">
                 <label className="inline-flex items-center gap-2">
                   <input type="radio" className="accent-[hsl(var(--primary))]" checked={payType === "Invoice"} onChange={() => setPayType("Invoice")} />
@@ -231,7 +231,6 @@ export default function PaymentVoucherCreate() {
                           <TableCell>{po.title}</TableCell>
                           <TableCell className="max-w-40">
                             <Input
-                              type="number"
                               value={poAmounts[po.id] ?? 0}
                               onChange={(e) =>
                                 setPoAmounts((s) => ({ ...s, [po.id]: Number(e.target.value) }))
