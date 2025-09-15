@@ -165,12 +165,12 @@ export default function Vendors() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right space-x-3">
-                    <ViewVendor value={v} expenseOptions={expenseOptions} />
-                    <EditVendor
-                      value={v}
-                      onSave={updateVendor as (v: Vendor) => void}
-                      expenseOptions={expenseOptions}
-                    />
+                    <Link to={`/vendors/${v.id}`} className="text-gray-700 hover:underline">
+                      View Details
+                    </Link>
+                    <Link to={`/vendors/${v.id}/edit`} className="text-blue-600 hover:underline">
+                      Edit
+                    </Link>
                     <button
                       className="text-red-600 hover:underline"
                       onClick={() => removeVendor(v.id)}
