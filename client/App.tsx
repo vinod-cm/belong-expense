@@ -34,11 +34,14 @@ const App = () => (
             <Route path="/expense/setup" element={<ExpenseSetup />} />
             <Route path="/expense/vendor-types" element={<VendorTypes />} />
             <Route path="/vendors" element={<Vendors />} />
+            <Route path="/vendors/:id" element={<VendorDetails />} />
+            <Route path="/vendors/:id/edit" element={<VendorEdit />} />
             <Route path="/expense/purchase" element={<PurchaseRequest />} />
             <Route path="/expense/purchase/:id" element={<PurchaseRequestDetails />} />
             <Route path="/expense/invoices" element={<InvoiceAccounting />} />
             <Route path="/expense/invoices/create" element={<CreateInvoicePage />} />
             <Route path="/expense/payment" element={<PaymentVoucherPage />} />
+            <Route path="/expense/payment/create" element={<PaymentVoucherCreate />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
