@@ -298,59 +298,45 @@ function EditPR({
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <Select
-                        value={it.tdsRate || ""}
-                        onValueChange={(v) => {
-                          if (v === "__custom__") {
-                            const nv = prompt("Enter TDS %", it.tdsRate || "");
-                            if (nv && !Number.isNaN(Number(nv))) {
-                              updateAndRecalc(setItems, idx, { tdsRate: nv });
-                            }
-                          } else {
-                            updateAndRecalc(setItems, idx, { tdsRate: v });
+                      <div className="flex gap-2">
+                        <Input
+                          value={it.tdsRate || ""}
+                          onChange={(e) =>
+                            updateAndRecalc(setItems, idx, { tdsRate: e.target.value })
                           }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          {it.tdsRate && !["1","2"].includes(it.tdsRate) ? (
-                            <SelectItem value={it.tdsRate}>{it.tdsRate}</SelectItem>
-                          ) : null}
-                          <SelectItem value="__custom__">Add new…</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          placeholder="0"
+                        />
+                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Pick" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1</SelectItem>
+                            <SelectItem value="2">2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </Field>
                     <Field label="GST %">
-                      <Select
-                        value={it.gstRate || ""}
-                        onValueChange={(v) => {
-                          if (v === "__custom__") {
-                            const nv = prompt("Enter GST %", it.gstRate || "");
-                            if (nv && !Number.isNaN(Number(nv))) {
-                              updateAndRecalc(setItems, idx, { gstRate: nv });
-                            }
-                          } else {
-                            updateAndRecalc(setItems, idx, { gstRate: v });
+                      <div className="flex gap-2">
+                        <Input
+                          value={it.gstRate || ""}
+                          onChange={(e) =>
+                            updateAndRecalc(setItems, idx, { gstRate: e.target.value })
                           }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="8">8</SelectItem>
-                          <SelectItem value="12">12</SelectItem>
-                          {it.gstRate && !["5","8","12"].includes(it.gstRate) ? (
-                            <SelectItem value={it.gstRate}>{it.gstRate}</SelectItem>
-                          ) : null}
-                          <SelectItem value="__custom__">Add new…</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          placeholder="0"
+                        />
+                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Pick" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5</SelectItem>
+                            <SelectItem value="8">8</SelectItem>
+                            <SelectItem value="12">12</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </Field>
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
@@ -411,6 +397,15 @@ function EditPR({
   );
 }
 
+const PO_CONFIG = { prefix: "PO", seqLength: 5 } as const;
+function nextPONumber(year: number) {
+  const key = `po-seq-${year}`;
+  const cur = Number(localStorage.getItem(key) || 0) + 1;
+  localStorage.setItem(key, String(cur));
+  const seq = String(cur).padStart(PO_CONFIG.seqLength, "0");
+  return `${PO_CONFIG.prefix}-${year}-${seq}`;
+}
+
 function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -422,12 +417,14 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
       return;
+    const yr = requestDate ? new Date(requestDate).getFullYear() : new Date().getFullYear();
     const pr: PR = {
       id: prNumber(),
       title: title.trim(),
       vendorId,
       requestDate,
       documentName: document?.name,
+      poNumber: nextPONumber(yr),
       items,
       approved: true,
     };
@@ -590,59 +587,45 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <Select
-                        value={it.tdsRate || ""}
-                        onValueChange={(v) => {
-                          if (v === "__custom__") {
-                            const nv = prompt("Enter TDS %", it.tdsRate || "");
-                            if (nv && !Number.isNaN(Number(nv))) {
-                              updateAndRecalc(setItems, idx, { tdsRate: nv });
-                            }
-                          } else {
-                            updateAndRecalc(setItems, idx, { tdsRate: v });
+                      <div className="flex gap-2">
+                        <Input
+                          value={it.tdsRate || ""}
+                          onChange={(e) =>
+                            updateAndRecalc(setItems, idx, { tdsRate: e.target.value })
                           }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          {it.tdsRate && !["1","2"].includes(it.tdsRate) ? (
-                            <SelectItem value={it.tdsRate}>{it.tdsRate}</SelectItem>
-                          ) : null}
-                          <SelectItem value="__custom__">Add new…</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          placeholder="0"
+                        />
+                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Pick" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1</SelectItem>
+                            <SelectItem value="2">2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </Field>
                     <Field label="GST %">
-                      <Select
-                        value={it.gstRate || ""}
-                        onValueChange={(v) => {
-                          if (v === "__custom__") {
-                            const nv = prompt("Enter GST %", it.gstRate || "");
-                            if (nv && !Number.isNaN(Number(nv))) {
-                              updateAndRecalc(setItems, idx, { gstRate: nv });
-                            }
-                          } else {
-                            updateAndRecalc(setItems, idx, { gstRate: v });
+                      <div className="flex gap-2">
+                        <Input
+                          value={it.gstRate || ""}
+                          onChange={(e) =>
+                            updateAndRecalc(setItems, idx, { gstRate: e.target.value })
                           }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="8">8</SelectItem>
-                          <SelectItem value="12">12</SelectItem>
-                          {it.gstRate && !["5","8","12"].includes(it.gstRate) ? (
-                            <SelectItem value={it.gstRate}>{it.gstRate}</SelectItem>
-                          ) : null}
-                          <SelectItem value="__custom__">Add new…</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          placeholder="0"
+                        />
+                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Pick" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5</SelectItem>
+                            <SelectItem value="8">8</SelectItem>
+                            <SelectItem value="12">12</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </Field>
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
