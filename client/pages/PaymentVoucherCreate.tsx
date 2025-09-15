@@ -22,7 +22,7 @@ export default function PaymentVoucherCreate() {
 
   const [payType, setPayType] = useState<"Invoice" | "Advance">("Invoice");
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
-  const [selectedInvoiceItemIds, setSelectedInvoiceItemIds] = useState<string[]>([]);
+  const [invoiceAmounts, setInvoiceAmounts] = useState<Record<string, number>>({});
   const [poAmounts, setPoAmounts] = useState<Record<string, number>>({});
 
   const [transactionNumber, setTransactionNumber] = useState("");
@@ -64,20 +64,25 @@ export default function PaymentVoucherCreate() {
     return rows;
   }, [selectedInvoices, prs]);
 
-  const totalFromItems = useMemo(() => {
-    return invoiceItems.filter((r) => selectedInvoiceItemIds.includes(r.id)).reduce((s, r) => s + r.amount, 0);
-  }, [invoiceItems, selectedInvoiceItemIds]);
+  const totalFromInvoices = useMemo(() => {
+    return selectedInvoices.reduce((s, inv) => s + Number(invoiceAmounts[inv.id] || 0), 0);
+  }, [selectedInvoices, invoiceAmounts]);
 
   const totalAdvance = useMemo(() => {
     return Object.entries(poAmounts).reduce((s, [_, n]) => s + (Number(n) || 0), 0);
   }, [poAmounts]);
 
-  const total = payType === "Invoice" ? totalFromItems : totalAdvance;
+  const total = payType === "Invoice" ? totalFromInvoices : totalAdvance;
 
   const canSave = useMemo(() => {
     if (!pvNo || !vendorId || !date) return false;
     if (payType === "Invoice") {
-      if (selectedInvoiceItemIds.length === 0) return false;
+      if (selectedInvoiceIds.length === 0) return false;
+      const invalid = selectedInvoices.some((inv) => {
+        const amt = Number(invoiceAmounts[inv.id] || 0);
+        return amt <= 0 || amt > inv.total;
+      });
+      if (invalid) return false;
     } else {
       const anyPoSelected = Object.values(poAmounts).some((n) => Number(n) > 0);
       if (!anyPoSelected) return false;
@@ -87,17 +92,15 @@ export default function PaymentVoucherCreate() {
     if (mode === "Demand Draft" && (!transactionBank || !ddDate || !depositSlipNumber)) return false;
     if (mode === "Account Transfer" && (!transactionBank || !transactionNumber)) return false;
     return total > 0;
-  }, [pvNo, vendorId, date, payType, selectedInvoiceItemIds, poAmounts, mode, transactionNumber, transactionBank, chequeDate, chequeNumber, ddDate, depositSlipNumber, total]);
+  }, [pvNo, vendorId, date, payType, selectedInvoiceIds, selectedInvoices, invoiceAmounts, poAmounts, mode, transactionNumber, transactionBank, chequeDate, chequeNumber, ddDate, depositSlipNumber, total]);
 
   const save = () => {
     if (!canSave) return;
     const invoiceAmounts = (payType === "Invoice"
-      ? selectedInvoices.map((inv) => {
-          const amount = invoiceItems
-            .filter((r) => r.invoiceId === inv.id && selectedInvoiceItemIds.includes(r.id))
-            .reduce((s, r) => s + r.amount, 0);
-          return { invoiceId: inv.id, amount };
-        })
+      ? selectedInvoices.map((inv) => ({
+          invoiceId: inv.id,
+          amount: Number(invoiceAmounts[inv.id] || 0),
+        }))
       : []) as { invoiceId: string; amount: number }[];
 
     addVoucher({
