@@ -599,6 +599,7 @@ function generateId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+const LEGAL_TYPES = ["Company", "Non-Company", "Professional"] as const;
 const ACCOUNT_TYPES = ["Goods", "Services", "Expense", "Other"] as const;
 const STATES = [
   "Andhra Pradesh",
