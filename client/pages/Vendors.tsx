@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface BankAccount {
   id: string;
@@ -219,3 +220,310 @@ function CreateVendor({
     />
   );
 }
+
+function VendorDialog({
+  title,
+  onSubmit,
+  expenseOptions,
+}: {
+  title: string;
+  onSubmit: (v: Vendor) => void;
+  expenseOptions: ExpenseAccountOption[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [address, setAddress] = useState("");
+  const [state, setState] = useState("");
+  const [legalType, setLegalType] = useState("");
+  const [vendorTypeId, setVendorTypeId] = useState("");
+  const [accountType, setAccountType] = useState("");
+  const [oneTime, setOneTime] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [expenseAccounts, setExpenseAccounts] = useState<string[]>([]);
+  const [bank, setBank] = useState<BankAccount[]>([emptyBank()]);
+
+  const save = () => {
+    if (!name.trim() || !email.trim() || !phone.trim() || !accountType) return;
+    const vendor: Vendor = {
+      id: generateId(),
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      notes: notes.trim() || undefined,
+      address: address.trim() || undefined,
+      state: state || undefined,
+      active: true,
+      legalType: legalType || undefined,
+      vendorTypeId: vendorTypeId || undefined,
+      accountType,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      oneTime,
+      expenseAccounts,
+      compliance: {},
+      documents: {},
+      bank,
+    };
+    onSubmit(vendor);
+    setOpen(false);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setNotes("");
+    setAddress("");
+    setState("");
+    setLegalType("");
+    setVendorTypeId("");
+    setAccountType("");
+    setOneTime(false);
+    setStartDate("");
+    setEndDate("");
+    setExpenseAccounts([]);
+    setBank([emptyBank()]);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>Add Vendor</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-8">
+          <Section title="Basic Details">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="v-name">Vendor Name *</Label>
+                <Input id="v-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="v-email">Email *</Label>
+                <Input required id="v-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="v-phone">Phone *</Label>
+                <Input required id="v-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="v-state">State</Label>
+                <Select value={state} onValueChange={setState}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select State" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Vendor Type</Label>
+                <Select value={vendorTypeId} onValueChange={setVendorTypeId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Vendor Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Vendor types are user-defined; show id for now */}
+                    {vendorTypeId ? (
+                      <SelectItem value={vendorTypeId}>{vendorTypeId}</SelectItem>
+                    ) : null}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Account Type *</Label>
+                <Select value={accountType} onValueChange={setAccountType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Account Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACCOUNT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-2 grid gap-2">
+                <Label>Address</Label>
+                <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
+              </div>
+              <div className="sm:col-span-2 grid gap-2">
+                <Label>Notes</Label>
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes" />
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Banking Info">
+            <div className="space-y-6">
+              {bank.map((b, idx) => (
+                <div key={b.id} className="rounded-md border p-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Bank Name *">
+                      <Input value={b.bankName} onChange={(e) => updateBank(setBank, idx, { bankName: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="Branch Name *">
+                      <Input value={b.branch} onChange={(e) => updateBank(setBank, idx, { branch: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="IFSC Code *">
+                      <Input value={b.ifsc} onChange={(e) => updateBank(setBank, idx, { ifsc: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="Account Holder Name *">
+                      <Input value={b.accHolder} onChange={(e) => updateBank(setBank, idx, { accHolder: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                    <Field label="Account Number *">
+                      <Input value={b.accNo} onChange={(e) => updateBank(setBank, idx, { accNo: e.target.value })} placeholder="Type Here" />
+                    </Field>
+                  </div>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <Button variant="secondary" onClick={() => setBank((s) => s.filter((_, i) => i !== idx))}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button variant="secondary" onClick={() => setBank((s) => [...s, emptyBank()])}>
+                Add Bank Account
+              </Button>
+            </div>
+          </Section>
+
+          <Section title="Settings">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-2">
+                <Checkbox id="v-onetime" checked={oneTime} onCheckedChange={(v) => setOneTime(Boolean(v))} />
+                <Label htmlFor="v-onetime">Vendor Type: One-time (no ledger)</Label>
+              </div>
+              <Field label="Start Date">
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </Field>
+              <Field label="End Date">
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </Field>
+              <div className="sm:col-span-2 grid gap-2">
+                <Label>Linked Expense Accounts</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="justify-between w-full">
+                      {expenseAccounts.length > 0
+                        ? expenseAccounts
+                            .map((x) => expenseOptions.find((o) => o.id === x)?.name || x)
+                            .join(", ")
+                        : "Select accounts"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-72">
+                    {expenseOptions.map((opt) => (
+                      <DropdownMenuCheckboxItem
+                        key={opt.id}
+                        checked={expenseAccounts.includes(opt.id)}
+                        onCheckedChange={(checked) =>
+                          setExpenseAccounts((s) => (checked ? [...s, opt.id] : s.filter((x) => x !== opt.id)))
+                        }
+                      >
+                        {opt.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </Section>
+
+          <div className="flex justify-end gap-3">
+            <Button onClick={save}>Save</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">{title}</h3>
+      <div className="rounded-lg border bg-white p-4">{children}</div>
+    </section>
+  );
+}
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-2">
+      <Label>{label}</Label>
+      {children}
+    </div>
+  );
+}
+function emptyBank(): BankAccount {
+  return {
+    id: generateId(),
+    bankName: "",
+    branch: "",
+    ifsc: "",
+    accNo: "",
+    accHolder: "",
+    doc: null,
+  };
+}
+function updateBank(
+  setter: React.Dispatch<React.SetStateAction<BankAccount[]>>,
+  index: number,
+  patch: Partial<BankAccount>,
+) {
+  setter((s) => s.map((b, i) => (i === index ? { ...b, ...patch } : b)));
+}
+function generateId() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+const ACCOUNT_TYPES = ["Goods", "Services", "Expense", "Other"] as const;
+const STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Puducherry",
+  "Chandigarh",
+  "Andaman and Nicobar Islands",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Lakshadweep",
+];
