@@ -209,7 +209,7 @@ function CreateVendor({
   onSave,
   expenseOptions,
 }: {
-  onSave: (v: Vendor) => void;
+  onSave: (v: StoreVendor) => void;
   expenseOptions: ExpenseAccountOption[];
 }) {
   return (
