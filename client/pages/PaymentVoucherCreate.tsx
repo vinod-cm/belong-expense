@@ -292,7 +292,7 @@ export default function PaymentVoucherCreate() {
             </section>
 
             <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Step 5: Payment Mode</h3>
+              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Payment Details</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Field label="Mode">
                   <Select value={mode} onValueChange={(v) => setMode(v as any)}>
