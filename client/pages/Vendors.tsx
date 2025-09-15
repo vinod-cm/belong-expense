@@ -261,7 +261,7 @@ function VendorDialog({
 
   const save = () => {
     if (!name.trim() || !email.trim() || !phone.trim()) return;
-    if (isGstRegistered && !gstin.trim() && !nonGstDoc) return;
+    if (isGstRegistered ? !gstin.trim() : !nonGstDoc) return;
     const vendor: StoreVendor = {
       id: generateId(),
       name: name.trim(),
@@ -490,16 +490,15 @@ function VendorDialog({
                 <Checkbox id="v-gst" checked={isGstRegistered} onCheckedChange={(v) => setIsGstRegistered(Boolean(v))} />
                 <Label htmlFor="v-gst">Is GST Registered?</Label>
               </div>
-              {isGstRegistered && (
-                <>
-                  <Field label="GSTIN or Non-GST Document">
-                    <Input placeholder="GSTIN" value={gstin} onChange={(e) => setGstin(e.target.value)} />
-                  </Field>
-                  <div className="sm:col-span-2 grid gap-2">
-                    <Label>Non-GST Document</Label>
-                    <FileBox onChange={setNonGstDoc} />
-                  </div>
-                </>
+              {isGstRegistered ? (
+                <Field label="GSTIN *">
+                  <Input placeholder="GSTIN" value={gstin} onChange={(e) => setGstin(e.target.value)} />
+                </Field>
+              ) : (
+                <div className="sm:col-span-2 grid gap-2">
+                  <Label>Non-GST Document *</Label>
+                  <FileBox onChange={setNonGstDoc} />
+                </div>
               )}
               <Field label="PAN Number">
                 <Input value={pan} onChange={(e) => setPan(e.target.value)} />
@@ -600,7 +599,7 @@ function generateId() {
 }
 
 const LEGAL_TYPES = ["Company", "Non-Company", "Professional"] as const;
-const ACCOUNT_TYPES = ["Goods", "Services", "Expense", "Other"] as const;
+const ACCOUNT_TYPES = ["Current", "Savings", "Expense"] as const;
 const STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
