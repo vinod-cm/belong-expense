@@ -61,23 +61,29 @@ export interface Vendor {
   active: boolean;
   legalType?: string;
   vendorTypeId?: string;
+  accountType?: string;
   startDate?: string;
   endDate?: string;
   oneTime?: boolean;
   expenseAccounts: string[];
   compliance: {
+    isGstRegistered?: boolean;
     gstin?: string;
     pan?: string;
     tan?: string;
     tdsSection?: string;
     tdsRate?: string;
     gstRate?: string;
+    msme?: boolean;
+    msmeNumber?: string;
   };
   documents: {
     registrationName?: string;
     gstCertName?: string;
     panCardName?: string;
     aadhaarName?: string;
+    nonGstDocName?: string;
+    msmeDocName?: string;
   };
   bank: VendorBank[];
 }
