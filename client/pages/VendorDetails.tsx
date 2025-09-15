@@ -48,7 +48,7 @@ export default function VendorDetails() {
                   <Field label="Phone" value={v.phone} />
                   <Field label="State" value={v.state} />
                   <Field label="Vendor Type" value={v.vendorTypeId} />
-                  <Field label="Account Type" value={v.compliance?.gstRate ? "Goods/Services" : v.compliance?.tdsRate ? "Services" : v.accountType} />
+                  <Field label="Legal Type" value={v.legalType} />
                   <div className="sm:col-span-3">
                     <Field label="Address" value={v.address} />
                   </div>
