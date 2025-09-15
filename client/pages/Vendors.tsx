@@ -114,7 +114,7 @@ export default function Vendors() {
               onChange={(e) => setQ(e.target.value)}
             />
             <CreateVendor
-              onSave={addVendor as (v: Vendor) => void}
+              onSave={addVendor}
               expenseOptions={expenseOptions}
             />
           </div>
