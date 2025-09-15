@@ -774,25 +774,32 @@ function updateQtyPrice(
   qty: number,
   price: number,
 ) {
+  const q = Number.isFinite(qty) ? qty : 0;
+  const p = Number.isFinite(price) ? price : 0;
   setter((s) =>
     s.map((b, i) =>
       i === index
         ? recalc({
             ...b,
-            qty,
-            unitPrice: price,
-            total: Number(qty) * Number(price),
+            qty: q,
+            unitPrice: p,
+            total: q * p,
           })
         : b,
     ),
   );
 }
 function recalc(item: PRItem): PRItem {
-  const base =
-    Number(item.total) ||
-    (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
-  const gstPct = Number(item.gstRate || 0);
-  const tdsPct = Number(item.tdsRate || 0);
+  const toNum = (v: any) => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const totalN = toNum(item.total);
+  const qtyN = toNum(item.qty);
+  const unitN = toNum(item.unitPrice);
+  const base = totalN || qtyN * unitN;
+  const gstPct = toNum(item.gstRate || 0);
+  const tdsPct = toNum(item.tdsRate || 0);
   const gstAmount = base * (gstPct / 100);
   const tdsAmount = base * (tdsPct / 100);
   const payable = base + gstAmount - tdsAmount;
