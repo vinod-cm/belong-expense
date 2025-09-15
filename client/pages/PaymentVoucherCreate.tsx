@@ -96,7 +96,7 @@ export default function PaymentVoucherCreate() {
 
   const save = () => {
     if (!canSave) return;
-    const invoiceAmounts = (payType === "Invoice"
+    const invoiceAmountsArr = (payType === "Invoice"
       ? selectedInvoices.map((inv) => ({
           invoiceId: inv.id,
           amount: Number(invoiceAmounts[inv.id] || 0),
@@ -118,7 +118,7 @@ export default function PaymentVoucherCreate() {
       chequeNumber: chequeNumber || undefined,
       ddDate: ddDate || undefined,
       depositSlipNumber: depositSlipNumber || undefined,
-      invoiceAmounts,
+      invoiceAmounts: invoiceAmountsArr,
       total,
     });
     navigate("/expense/payment");
