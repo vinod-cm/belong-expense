@@ -16,12 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Table,
   TableBody,
@@ -304,47 +307,18 @@ function EditPR({
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <div className="relative">
-                        <Input
-                          className="pr-28"
-                          value={it.tdsRate || ""}
-                          onChange={(e) =>
-                            updateAndRecalc(setItems, idx, { tdsRate: e.target.value })
-                          }
-                          placeholder="0"
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "1" })}>1%</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "2" })}>2%</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <PercentCombobox
+                        value={it.tdsRate || ""}
+                        options={["1", "2"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
+                      />
                     </Field>
                     <Field label="GST %">
-                      <div className="relative">
-                        <Input
-                          className="pr-28"
-                          value={it.gstRate || ""}
-                          onChange={(e) =>
-                            updateAndRecalc(setItems, idx, { gstRate: e.target.value })
-                          }
-                          placeholder="0"
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "5" })}>5%</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "8" })}>8%</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "12" })}>12%</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <PercentCombobox
+                        value={it.gstRate || ""}
+                        options={["5", "8", "12"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}
+                      />
                     </Field>
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
@@ -595,47 +569,18 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <div className="relative">
-                        <Input
-                          className="pr-28"
-                          value={it.tdsRate || ""}
-                          onChange={(e) =>
-                            updateAndRecalc(setItems, idx, { tdsRate: e.target.value })
-                          }
-                          placeholder="0"
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "1" })}>1%</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "2" })}>2%</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <PercentCombobox
+                        value={it.tdsRate || ""}
+                        options={["1", "2"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
+                      />
                     </Field>
                     <Field label="GST %">
-                      <div className="relative">
-                        <Input
-                          className="pr-28"
-                          value={it.gstRate || ""}
-                          onChange={(e) =>
-                            updateAndRecalc(setItems, idx, { gstRate: e.target.value })
-                          }
-                          placeholder="0"
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "5" })}>5%</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "8" })}>8%</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "12" })}>12%</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <PercentCombobox
+                        value={it.gstRate || ""}
+                        options={["5", "8", "12"]}
+                        onChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}
+                      />
                     </Field>
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
@@ -814,6 +759,41 @@ function recalc(item: PRItem): PRItem {
   const tdsAmount = base * (tdsPct / 100);
   const payable = base + gstAmount - tdsAmount;
   return { ...item, total: base, gstAmount, tdsAmount, payable };
+}
+
+function PercentCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <div className="relative">
+        <Input
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setOpen(true)}
+          className="pr-8"
+          placeholder="0"
+        />
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">▼</Button>
+        </PopoverTrigger>
+      </div>
+      <PopoverContent align="end" className="p-0 w-56">
+        <Command>
+          <CommandInput placeholder="Search %" />
+          <CommandEmpty>No options</CommandEmpty>
+          <CommandList>
+            <CommandGroup>
+              {options.map((o) => (
+                <CommandItem key={o} onSelect={() => { onChange(o); setOpen(false); }}>
+                  {o}%
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 const VENDORS = [
