@@ -141,8 +141,6 @@ function GroupsTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>GL Code</TableHead>
-            <TableHead>Hsn Sac Code</TableHead>
             <TableHead>Budget Amount</TableHead>
             <TableHead>Created On</TableHead>
             <TableHead>Status</TableHead>
@@ -153,8 +151,6 @@ function GroupsTable({
           {items.map((g) => (
             <TableRow key={g.id}>
               <TableCell className="font-medium">{g.name}</TableCell>
-              <TableCell>{g.id}</TableCell>
-              <TableCell>—</TableCell>
               <TableCell>₹{g.budget.toLocaleString()}</TableCell>
               <TableCell>{new Date(g.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>
@@ -171,7 +167,7 @@ function GroupsTable({
           ))}
           {items.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+              <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
                 No groups yet
               </TableCell>
             </TableRow>
@@ -284,7 +280,7 @@ function AddGroupButton({ onSave }: { onSave: (g: Group) => void }) {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="g-budget">Budget Amount *</Label>
-            <Input id="g-budget" type="number" value={budget} onChange={(e) => setBudget(Number(e.target.value))} placeholder="Amount" />
+            <Input id="g-budget" value={budget} onChange={(e) => setBudget(Number(e.target.value))} placeholder="Amount" />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox id="g-active" checked={active} onCheckedChange={(v) => setActive(Boolean(v))} />
@@ -327,7 +323,7 @@ function EditGroupButton({ value, onSave }: { value: Group; onSave: (g: Group) =
           </div>
           <div className="grid gap-2">
             <Label htmlFor={`eg-budget-${value.id}`}>Budget Amount *</Label>
-            <Input id={`eg-budget-${value.id}`} type="number" value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
+            <Input id={`eg-budget-${value.id}`} value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox id={`eg-active-${value.id}`} checked={active} onCheckedChange={(v) => setActive(Boolean(v))} />
@@ -419,7 +415,7 @@ function AddAccountButton({
           </div>
           <div className="grid gap-2">
             <Label htmlFor="ea-budget">Budget Amount *</Label>
-            <Input id="ea-budget" type="number" value={budget} onChange={(e) => setBudget(Number(e.target.value))} placeholder="Enter Amount" />
+            <Input id="ea-budget" value={budget} onChange={(e) => setBudget(Number(e.target.value))} placeholder="Enter Amount" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="ea-hsn">Hsn Sac Code *</Label>
@@ -482,7 +478,7 @@ function EditAccountButton({ value, groups, onSave }: { value: ExpenseAccount; g
           </div>
           <div className="grid gap-2">
             <Label htmlFor={`ea-budget-${value.id}`}>Budget Amount *</Label>
-            <Input id={`ea-budget-${value.id}`} type="number" value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
+            <Input id={`ea-budget-${value.id}`} value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor={`ea-hsn-${value.id}`}>Hsn Sac Code *</Label>
