@@ -252,54 +252,36 @@ export default function PaymentVoucherCreate() {
               )}
             </section>
 
-            {payType === "Invoice" && (
+            {payType === "Invoice" && selectedInvoices.length > 0 && (
               <section>
-                <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Step 3: Select Invoice Items</h3>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead></TableHead>
-                        <TableHead>Invoice #</TableHead>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead>Payable Amount</TableHead>
-                        <TableHead>GST %</TableHead>
-                        <TableHead>TDS %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoiceItems.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              className="accent-[hsl(var(--primary))]"
-                              checked={selectedInvoiceItemIds.includes(r.id)}
-                              onChange={(e) =>
-                                setSelectedInvoiceItemIds((s) =>
-                                  e.target.checked ? [...s, r.id] : s.filter((x) => x !== r.id),
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>{r.invoiceNumber}</TableCell>
-                          <TableCell>{r.name}</TableCell>
-                          <TableCell>{r.qty}</TableCell>
-                          <TableCell>₹{r.amount.toLocaleString()}</TableCell>
-                          <TableCell>{r.gstPct}%</TableCell>
-                          <TableCell>{r.tdsPct}%</TableCell>
-                        </TableRow>
-                      ))}
-                      {invoiceItems.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">
-                            Select invoices to see items
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Selected Invoices</h3>
+                <div className="rounded-md border p-3 space-y-4">
+                  {selectedInvoices.map((inv) => {
+                    const maxAmt = inv.total;
+                    const val = Number(invoiceAmounts[inv.id] || 0);
+                    const over = val > maxAmt;
+                    return (
+                      <div key={inv.id} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <Field label="Invoice #">
+                          <Input readOnly value={inv.number} />
+                        </Field>
+                        <Field label="Payable Amount">
+                          <Input readOnly value={`₹${inv.total.toLocaleString()}`} />
+                        </Field>
+                        <Field label="Amount">
+                          <Input
+                            value={invoiceAmounts[inv.id] ?? ""}
+                            onChange={(e) =>
+                              setInvoiceAmounts((s) => ({ ...s, [inv.id]: Number(e.target.value) }))
+                            }
+                          />
+                          {over && (
+                            <div className="mt-1 text-sm text-destructive">Amount cannot exceed invoice payable.</div>
+                          )}
+                        </Field>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
