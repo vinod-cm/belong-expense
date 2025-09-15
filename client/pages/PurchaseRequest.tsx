@@ -247,25 +247,25 @@ function EditPR({
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field label="Unit To Measure *">
-                      <Select
-                        value={it.uom}
-                        onValueChange={(v) =>
-                          updateItem(setItems, idx, { uom: v })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Count" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UOMS.map((u) => (
-                            <SelectItem key={u} value={u}>
-                              {u}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                    {it.type === "Goods" && (
+                      <Field label="Unit of Measure *">
+                        <Select
+                          value={it.uom}
+                          onValueChange={(v) => updateItem(setItems, idx, { uom: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UOMS.map((u) => (
+                              <SelectItem key={u} value={u}>
+                                {u}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
                     <Field label="Quantity *">
                       <Input
                         value={it.qty}
@@ -298,26 +298,59 @@ function EditPR({
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <Input
+                      <Select
                         value={it.tdsRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            tdsRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
-                      />
+                        onValueChange={(v) => {
+                          if (v === "__custom__") {
+                            const nv = prompt("Enter TDS %", it.tdsRate || "");
+                            if (nv && !Number.isNaN(Number(nv))) {
+                              updateAndRecalc(setItems, idx, { tdsRate: nv });
+                            }
+                          } else {
+                            updateAndRecalc(setItems, idx, { tdsRate: v });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          {it.tdsRate && !["1","2"].includes(it.tdsRate) ? (
+                            <SelectItem value={it.tdsRate}>{it.tdsRate}</SelectItem>
+                          ) : null}
+                          <SelectItem value="__custom__">Add new…</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </Field>
                     <Field label="GST %">
-                      <Input
+                      <Select
                         value={it.gstRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            gstRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
-                      />
+                        onValueChange={(v) => {
+                          if (v === "__custom__") {
+                            const nv = prompt("Enter GST %", it.gstRate || "");
+                            if (nv && !Number.isNaN(Number(nv))) {
+                              updateAndRecalc(setItems, idx, { gstRate: nv });
+                            }
+                          } else {
+                            updateAndRecalc(setItems, idx, { gstRate: v });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="8">8</SelectItem>
+                          <SelectItem value="12">12</SelectItem>
+                          {it.gstRate && !["5","8","12"].includes(it.gstRate) ? (
+                            <SelectItem value={it.gstRate}>{it.gstRate}</SelectItem>
+                          ) : null}
+                          <SelectItem value="__custom__">Add new…</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </Field>
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
@@ -396,7 +429,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
       requestDate,
       documentName: document?.name,
       items,
-      approved: false,
+      approved: true,
     };
     onSave(pr);
     setOpen(false);
@@ -506,25 +539,25 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field label="Unit To Measure *">
-                      <Select
-                        value={it.uom}
-                        onValueChange={(v) =>
-                          updateItem(setItems, idx, { uom: v })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Count" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UOMS.map((u) => (
-                            <SelectItem key={u} value={u}>
-                              {u}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                    {it.type === "Goods" && (
+                      <Field label="Unit of Measure *">
+                        <Select
+                          value={it.uom}
+                          onValueChange={(v) => updateItem(setItems, idx, { uom: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UOMS.map((u) => (
+                              <SelectItem key={u} value={u}>
+                                {u}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    )}
                     <Field label="Quantity *">
                       <Input
                         value={it.qty}
@@ -557,26 +590,59 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <Input
+                      <Select
                         value={it.tdsRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            tdsRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
-                      />
+                        onValueChange={(v) => {
+                          if (v === "__custom__") {
+                            const nv = prompt("Enter TDS %", it.tdsRate || "");
+                            if (nv && !Number.isNaN(Number(nv))) {
+                              updateAndRecalc(setItems, idx, { tdsRate: nv });
+                            }
+                          } else {
+                            updateAndRecalc(setItems, idx, { tdsRate: v });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          {it.tdsRate && !["1","2"].includes(it.tdsRate) ? (
+                            <SelectItem value={it.tdsRate}>{it.tdsRate}</SelectItem>
+                          ) : null}
+                          <SelectItem value="__custom__">Add new…</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </Field>
                     <Field label="GST %">
-                      <Input
+                      <Select
                         value={it.gstRate || ""}
-                        onChange={(e) =>
-                          updateAndRecalc(setItems, idx, {
-                            gstRate: e.target.value,
-                          })
-                        }
-                        placeholder="0"
-                      />
+                        onValueChange={(v) => {
+                          if (v === "__custom__") {
+                            const nv = prompt("Enter GST %", it.gstRate || "");
+                            if (nv && !Number.isNaN(Number(nv))) {
+                              updateAndRecalc(setItems, idx, { gstRate: nv });
+                            }
+                          } else {
+                            updateAndRecalc(setItems, idx, { gstRate: v });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="8">8</SelectItem>
+                          <SelectItem value="12">12</SelectItem>
+                          {it.gstRate && !["5","8","12"].includes(it.gstRate) ? (
+                            <SelectItem value={it.gstRate}>{it.gstRate}</SelectItem>
+                          ) : null}
+                          <SelectItem value="__custom__">Add new…</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </Field>
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
