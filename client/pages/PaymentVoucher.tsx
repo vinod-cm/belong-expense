@@ -35,7 +35,9 @@ export default function PaymentVoucherPage() {
       <div className="h-full flex flex-col">
         <div className="flex items-center justify-between gap-2 px-0 py-3">
           <h1 className="text-xl font-semibold">Payment Workflow</h1>
-          <CreatePV />
+          <Link to="/expense/payment/create">
+            <Button>Create Payment Voucher</Button>
+          </Link>
         </div>
         <div className="flex-1 overflow-hidden">
           <Table>
