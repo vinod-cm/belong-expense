@@ -106,11 +106,17 @@ export interface PaymentVoucher {
   vendorId: string;
   pvNumber: string;
   bankAccount: string;
-  mode: "UPI" | "NEFT" | "Cheque";
+  mode: "UPI" | "Cash" | "Cheque" | "Demand Draft" | "Account Transfer";
   date: string;
   description?: string;
   debitNoteLink?: string;
   fileName?: string;
+  transactionNumber?: string;
+  transactionBank?: string;
+  chequeDate?: string;
+  chequeNumber?: string;
+  ddDate?: string;
+  depositSlipNumber?: string;
   invoiceAmounts: PaymentInvoiceAmount[];
   total: number;
 }
