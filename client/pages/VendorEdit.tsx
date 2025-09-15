@@ -216,7 +216,7 @@ export default function VendorEdit() {
 }
 
 const LEGAL_TYPES = ["Company", "Non-company", "Professional"] as const;
-const ACCOUNT_TYPES = ["Goods", "Services", "Expense", "Other"] as const;
+const ACCOUNT_TYPES = ["Current", "Savings", "Expense"] as const;
 const STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
