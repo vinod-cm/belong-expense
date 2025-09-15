@@ -36,10 +36,7 @@ export default function PaymentVoucherPage() {
               ))}
               {vouchers.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="py-12 text-center text-muted-foreground"
-                  >
+                  <TableCell colSpan={4} className="py-12 text-center text-muted-foreground">
                     No Payment Vouchers
                   </TableCell>
                 </TableRow>
@@ -51,51 +48,3 @@ export default function PaymentVoucherPage() {
     </AppShell>
   );
 }
-
-  const { vendors, invoices, addVoucher } = useExpense();
-  const [open, setOpen] = useState(false);
-  const [pvNo, setPvNo] = useState("");
-  const [vendorId, setVendorId] = useState("");
-  const [mode, setMode] = useState<"UPI" | "NEFT" | "Cheque">("UPI");
-  const [bank, setBank] = useState("");
-  const [date, setDate] = useState("");
-  const [desc, setDesc] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [selected, setSelected] = useState<Record<string, number>>({});
-
-  const vendorInvoices = useMemo(
-    () => invoices.filter((i) => i.vendorId === vendorId),
-    [invoices, vendorId],
-  );
-  const total = Object.values(selected).reduce(
-    (s, n) => s + (Number(n) || 0),
-    0,
-  );
-
-  const save = () => {
-    const invoiceAmounts = Object.entries(selected).map(
-      ([invoiceId, amount]) => ({ invoiceId, amount: Number(amount) }),
-    );
-    if (!pvNo || !vendorId || !date || invoiceAmounts.length === 0) return;
-    addVoucher({
-      id: id("PV"),
-      vendorId,
-      pvNumber: pvNo,
-      bankAccount: bank,
-      mode,
-      date,
-      description: desc || undefined,
-      fileName: file?.name,
-      invoiceAmounts,
-      total,
-    });
-    setOpen(false);
-    setPvNo("");
-    setVendorId("");
-    setMode("UPI");
-    setBank("");
-    setDate("");
-    setDesc("");
-    setFile(null);
-    setSelected({});
-  };
