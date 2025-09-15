@@ -338,6 +338,18 @@ export default function PaymentVoucherCreate() {
                     </Field>
                   </>
                 )}
+                <Field label="Payment Date *">
+                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                </Field>
+                <div className="sm:col-span-2 grid gap-2">
+                  <Label>Payment Document</Label>
+                  <FileBox onChange={setFile} />
+                </div>
+                <div className="sm:col-span-2 grid gap-2">
+                  <Label>Description</Label>
+                  <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Type here" />
+                </div>
+                <div className="sm:col-span-2 rounded-md border p-3 font-semibold">Total Payment Amount: ₹{total.toLocaleString()}</div>
               </div>
             </section>
 
