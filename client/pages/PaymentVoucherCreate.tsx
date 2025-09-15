@@ -136,7 +136,7 @@ export default function PaymentVoucherCreate() {
         <div className="flex-1 overflow-auto p-4">
           <div className="grid gap-6">
             <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Step 1: Select Vendor</h3>
+              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Select Vendor</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Field label="Payment Voucher No *">
                   <Input value={pvNo} onChange={(e) => setPvNo(e.target.value)} />
