@@ -17,6 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -298,44 +304,46 @@ function EditPR({
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <div className="flex gap-2">
+                      <div className="relative">
                         <Input
+                          className="pr-28"
                           value={it.tdsRate || ""}
                           onChange={(e) =>
                             updateAndRecalc(setItems, idx, { tdsRate: e.target.value })
                           }
                           placeholder="0"
                         />
-                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue placeholder="Pick" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1</SelectItem>
-                            <SelectItem value="2">2</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "1" })}>1%</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "2" })}>2%</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </Field>
                     <Field label="GST %">
-                      <div className="flex gap-2">
+                      <div className="relative">
                         <Input
+                          className="pr-28"
                           value={it.gstRate || ""}
                           onChange={(e) =>
                             updateAndRecalc(setItems, idx, { gstRate: e.target.value })
                           }
                           placeholder="0"
                         />
-                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue placeholder="Pick" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="5">5</SelectItem>
-                            <SelectItem value="8">8</SelectItem>
-                            <SelectItem value="12">12</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "5" })}>5%</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "8" })}>8%</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "12" })}>12%</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </Field>
                     <Field label="GST Amount">
@@ -587,44 +595,46 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
-                      <div className="flex gap-2">
+                      <div className="relative">
                         <Input
+                          className="pr-28"
                           value={it.tdsRate || ""}
                           onChange={(e) =>
                             updateAndRecalc(setItems, idx, { tdsRate: e.target.value })
                           }
                           placeholder="0"
                         />
-                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue placeholder="Pick" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1</SelectItem>
-                            <SelectItem value="2">2</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "1" })}>1%</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { tdsRate: "2" })}>2%</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </Field>
                     <Field label="GST %">
-                      <div className="flex gap-2">
+                      <div className="relative">
                         <Input
+                          className="pr-28"
                           value={it.gstRate || ""}
                           onChange={(e) =>
                             updateAndRecalc(setItems, idx, { gstRate: e.target.value })
                           }
                           placeholder="0"
                         />
-                        <Select onValueChange={(v) => updateAndRecalc(setItems, idx, { gstRate: v })}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue placeholder="Pick" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="5">5</SelectItem>
-                            <SelectItem value="8">8</SelectItem>
-                            <SelectItem value="12">12</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">Quick pick</Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "5" })}>5%</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "8" })}>8%</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAndRecalc(setItems, idx, { gstRate: "12" })}>12%</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </Field>
                     <Field label="GST Amount">
