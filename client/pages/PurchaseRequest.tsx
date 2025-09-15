@@ -268,7 +268,6 @@ function EditPR({
                     </Field>
                     <Field label="Quantity *">
                       <Input
-                        type="number"
                         value={it.qty}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -283,7 +282,6 @@ function EditPR({
                     </Field>
                     <Field label="Unit Price *">
                       <Input
-                        type="number"
                         value={it.unitPrice}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -297,7 +295,7 @@ function EditPR({
                       />
                     </Field>
                     <Field label="Total Price *">
-                      <Input type="number" value={it.total} readOnly />
+                      <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
                       <Input
@@ -529,7 +527,6 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     </Field>
                     <Field label="Quantity *">
                       <Input
-                        type="number"
                         value={it.qty}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -544,7 +541,6 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     </Field>
                     <Field label="Unit Price *">
                       <Input
-                        type="number"
                         value={it.unitPrice}
                         onChange={(e) =>
                           updateQtyPrice(
@@ -558,7 +554,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       />
                     </Field>
                     <Field label="Total Price *">
-                      <Input type="number" value={it.total} readOnly />
+                      <Input value={it.total} readOnly />
                     </Field>
                     <Field label="TDS %">
                       <Input
