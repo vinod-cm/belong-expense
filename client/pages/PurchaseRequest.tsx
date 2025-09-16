@@ -435,7 +435,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
-                    {VENDORS.map((v) => (
+                    {vendors.map((v) => (
                       <SelectItem key={v.id} value={v.id}>
                         {v.name}
                       </SelectItem>
