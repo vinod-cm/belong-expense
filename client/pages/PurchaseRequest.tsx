@@ -136,6 +136,7 @@ function EditPR({
   const [requestDate, setRequestDate] = useState(value.requestDate);
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>(value.items);
+  const { vendors } = useExpense();
 
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
