@@ -427,13 +427,6 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
         <div className="grid gap-8">
           <Section title="Basic Details">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Title *">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Type Name here"
-                />
-              </Field>
               <Field label="Select Vendor *">
                 <Select value={vendorId} onValueChange={setVendorId}>
                   <SelectTrigger>
@@ -447,6 +440,13 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     ))}
                   </SelectContent>
                 </Select>
+              </Field>
+              <Field label="Title *">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Type Name here"
+                />
               </Field>
               <Field label="Request Date *">
                 <Input
