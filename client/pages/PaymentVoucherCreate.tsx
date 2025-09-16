@@ -140,7 +140,7 @@ export default function PaymentVoucherCreate() {
                   </Select>
                 </Field>
                 <Field label="Select PR">
-                  <Select value={prId} onValueChange={setPrId}>
+                  <Select value={prId} onValueChange={(v) => { setPrId(v); setSelectedInvoiceIds([]); setInvoiceAmounts({}); setAdvanceAmount(0); setInvoiceToAdd(""); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Approved PRs of selected vendor" />
                     </SelectTrigger>
