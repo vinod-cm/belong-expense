@@ -175,7 +175,7 @@ export default function CreateInvoicePage() {
                             <Input readOnly value={calc.tds.toString()} />
                           </Field>
                           <div className="grid gap-2">
-                            <Label>Row Total</Label>
+                            <Label>Payable Amount</Label>
                             <div className="flex items-center gap-2">
                               <Input readOnly value={calc.total.toString()} />
                               <Button variant="secondary" onClick={() => removeRow(r.id)}>Remove</Button>
