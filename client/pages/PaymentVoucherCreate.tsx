@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function PaymentVoucherCreate() {
   const navigate = useNavigate();
-  const { vendors, prs, invoices, addVoucher } = useExpense();
+  const { vendors, prs, invoices, vouchers, debitNotes, addVoucher } = useExpense();
 
   const [vendorId, setVendorId] = useState("");
   const [prId, setPrId] = useState("");
@@ -49,8 +49,11 @@ export default function PaymentVoucherCreate() {
       if (!prId) return false;
       if (selectedInvoiceIds.length === 0) return false;
       const invalid = selectedInvoices.some((inv) => {
+        const paid = vouchers.reduce((s,v)=> s + v.invoiceAmounts.filter(ia=>ia.invoiceId===inv.id).reduce((x,y)=> x + y.amount,0),0);
+        const deb = debitNotes.filter(d=>d.invoiceId===inv.id).reduce((s,d)=> s + d.amount,0);
+        const maxAmt = Math.max(0, inv.total - paid - deb);
         const amt = Number(invoiceAmounts[inv.id] || 0);
-        return amt <= 0 || amt > inv.total;
+        return amt <= 0 || amt > maxAmt;
       });
       if (invalid) return false;
     } else {
@@ -179,10 +182,10 @@ export default function PaymentVoucherCreate() {
                         </SelectTrigger>
                         <SelectContent>
                           {prInvoices.map((inv) => (
-                            <SelectItem key={inv.id} value={inv.id}>
-                              {inv.number} — ₹{inv.total.toLocaleString()}
-                            </SelectItem>
-                          ))}
+                        <SelectItem key={inv.id} value={inv.id}>
+                          {inv.number} — ₹{(Math.max(0, inv.total - vouchers.reduce((s,v)=> s + v.invoiceAmounts.filter(ia=>ia.invoiceId===inv.id).reduce((x,y)=> x + y.amount,0),0) - debitNotes.filter(d=>d.invoiceId===inv.id).reduce((s,d)=> s + d.amount,0))).toLocaleString()}
+                        </SelectItem>
+                      ))}
                         </SelectContent>
                       </Select>
                     </Field>
@@ -206,7 +209,9 @@ export default function PaymentVoucherCreate() {
                   {selectedInvoices.length > 0 ? (
                     <div className="space-y-3">
                       {selectedInvoices.map((inv) => {
-                        const maxAmt = inv.total;
+                        const paid = vouchers.reduce((s,v)=> s + v.invoiceAmounts.filter(ia=>ia.invoiceId===inv.id).reduce((x,y)=> x + y.amount,0),0);
+                        const deb = debitNotes.filter(d=>d.invoiceId===inv.id).reduce((s,d)=> s + d.amount,0);
+                        const maxAmt = Math.max(0, inv.total - paid - deb);
                         const val = Number(invoiceAmounts[inv.id] || 0);
                         const over = val > maxAmt;
                         return (
@@ -215,7 +220,7 @@ export default function PaymentVoucherCreate() {
                               <Field label="Invoice #">
                                 <Input readOnly value={inv.number} />
                               </Field>
-                              <Field label="Invoice Total">
+                              <Field label="Outstanding Payable">
                                 <Input readOnly value={`₹${maxAmt.toLocaleString()}`} />
                               </Field>
                               <Field label="Payment Amount">
