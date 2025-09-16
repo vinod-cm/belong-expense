@@ -21,9 +21,16 @@ export default function PurchaseRequestDetails() {
       <div className="h-full flex flex-col">
         <div className="flex items-center justify-between gap-2 px-4 py-3">
           <h1 className="text-xl font-semibold">PR Details</h1>
-          <Link to="/expense/purchase">
-            <Button variant="secondary">Back</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {pr && (
+              <Link to={`/expense/purchase/${pr.id}/debit-note`}>
+                <Button>Add Debit Note</Button>
+              </Link>
+            )}
+            <Link to="/expense/purchase">
+              <Button variant="secondary">Back</Button>
+            </Link>
+          </div>
         </div>
         <div className="flex-1 overflow-auto p-4">
           {!pr ? (
