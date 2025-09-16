@@ -11,7 +11,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function CreateInvoicePage() {
-  const { prs, vendors, addInvoice } = useExpense();
+  const { prs, vendors, invoices, addInvoice } = useExpense();
   const navigate = useNavigate();
 
   const approvedPOs = useMemo(() => prs.filter((p) => p.approved && p.poNumber), [prs]);
