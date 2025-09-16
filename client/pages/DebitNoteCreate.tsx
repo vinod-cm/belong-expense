@@ -23,6 +23,7 @@ export default function DebitNoteCreate() {
   const [description, setDescription] = useState("");
   const [vendorRef, setVendorRef] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
+  const [notes, setNotes] = useState("");
 
   const mode: "invoice" | "po" = prInvoices.length > 0 ? "invoice" : "po";
 
@@ -41,6 +42,7 @@ export default function DebitNoteCreate() {
       description: description || undefined,
       vendorRef: vendorRef || undefined,
       fileNames,
+      notes: notes || undefined,
       invoiceId: mode === "invoice" ? invoiceId || undefined : undefined,
     });
     navigate(`/expense/purchase/${pr.id}`);
@@ -112,7 +114,7 @@ export default function DebitNoteCreate() {
                   </div>
                   <div className="sm:col-span-2">
                     <Field label="Notes">
-                      <Textarea placeholder="Any additional notes" />
+                      <Textarea placeholder="Any additional notes" value={notes} onChange={(e)=> setNotes(e.target.value)} />
                     </Field>
                   </div>
                 </div>
