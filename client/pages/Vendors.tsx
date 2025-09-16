@@ -262,6 +262,8 @@ function VendorDialog({
   const save = () => {
     if (!name.trim() || !email.trim() || !phone.trim()) return;
     if (isGstRegistered ? !gstin.trim() : !nonGstDoc) return;
+    if (!legalType) return;
+    if (expenseAccounts.length === 0) return;
     const vendor: StoreVendor = {
       id: generateId(),
       name: name.trim(),
@@ -455,7 +457,7 @@ function VendorDialog({
                 <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </Field>
               <div className="sm:col-span-2 grid gap-2">
-                <Label>Linked Expense Accounts</Label>
+                <Label>Linked Expense Accounts *</Label>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="justify-between w-full">
@@ -509,7 +511,7 @@ function VendorDialog({
               <Field label="TDS Section Code">
                 <Input value={tdsSection} onChange={(e) => setTdsSection(e.target.value)} />
               </Field>
-              <Field label="Vendor Legal Type">
+              <Field label="Vendor Legal Type *">
                 <Select value={legalType} onValueChange={setLegalType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />

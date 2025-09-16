@@ -136,6 +136,12 @@ function EditPR({
   const [requestDate, setRequestDate] = useState(value.requestDate);
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>(value.items);
+  const { vendors } = useExpense();
+  const allExpenseAccounts = useMemo(() => {
+    const ids = new Set<string>();
+    vendors.forEach((v) => v.expenseAccounts.forEach((a) => ids.add(a)));
+    return Array.from(ids);
+  }, [vendors]);
 
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
@@ -182,7 +188,7 @@ function EditPR({
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
-                    {VENDORS.map((v) => (
+                    {vendors.map((v) => (
                       <SelectItem key={v.id} value={v.id}>
                         {v.name}
                       </SelectItem>
@@ -232,9 +238,9 @@ function EditPR({
                           <SelectValue placeholder="Account" />
                         </SelectTrigger>
                         <SelectContent>
-                          {ACCOUNTS.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.name}
+                          {allExpenseAccounts.map((acc) => (
+                            <SelectItem key={acc} value={acc}>
+                              {acc}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -323,16 +329,12 @@ function EditPR({
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
                     </Field>
-                    <Field label="TDS Amount">
-                      <Input value={(it.tdsAmount ?? 0).toString()} readOnly />
-                    </Field>
-                    <Field label="Payable Amount">
+
+                    <Field label="Total Amount">
                       <Input
                         value={(
-                          it.payable ??
                           it.total +
-                            it.total * (Number(it.gstRate || 0) / 100) -
-                            it.total * (Number(it.tdsRate || 0) / 100)
+                            it.total * (Number(it.gstRate || 0) / 100)
                         ).toString()}
                         readOnly
                       />
@@ -395,6 +397,12 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const [requestDate, setRequestDate] = useState("");
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>([emptyItem()]);
+  const { vendors } = useExpense();
+  const allExpenseAccounts = useMemo(() => {
+    const ids = new Set<string>();
+    vendors.forEach((v) => v.expenseAccounts.forEach((a) => ids.add(a)));
+    return Array.from(ids);
+  }, [vendors]);
 
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
@@ -431,26 +439,26 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
         <div className="grid gap-8">
           <Section title="Basic Details">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Title *">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Type Name here"
-                />
-              </Field>
               <Field label="Select Vendor *">
                 <Select value={vendorId} onValueChange={setVendorId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
-                    {VENDORS.map((v) => (
+                    {vendors.map((v) => (
                       <SelectItem key={v.id} value={v.id}>
                         {v.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </Field>
+              <Field label="Title *">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Type Name here"
+                />
               </Field>
               <Field label="Request Date *">
                 <Input
@@ -494,9 +502,9 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                           <SelectValue placeholder="Account" />
                         </SelectTrigger>
                         <SelectContent>
-                          {ACCOUNTS.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.name}
+                          {allExpenseAccounts.map((acc) => (
+                            <SelectItem key={acc} value={acc}>
+                              {acc}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -585,16 +593,12 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
                     </Field>
-                    <Field label="TDS Amount">
-                      <Input value={(it.tdsAmount ?? 0).toString()} readOnly />
-                    </Field>
-                    <Field label="Payable Amount">
+
+                    <Field label="Total Amount">
                       <Input
                         value={(
-                          it.payable ??
                           it.total +
-                            it.total * (Number(it.gstRate || 0) / 100) -
-                            it.total * (Number(it.tdsRate || 0) / 100)
+                            it.total * (Number(it.gstRate || 0) / 100)
                         ).toString()}
                         readOnly
                       />
@@ -754,11 +758,9 @@ function recalc(item: PRItem): PRItem {
   const unitN = toNum(item.unitPrice);
   const base = totalN || qtyN * unitN;
   const gstPct = toNum(item.gstRate || 0);
-  const tdsPct = toNum(item.tdsRate || 0);
   const gstAmount = base * (gstPct / 100);
-  const tdsAmount = base * (tdsPct / 100);
-  const payable = base + gstAmount - tdsAmount;
-  return { ...item, total: base, gstAmount, tdsAmount, payable };
+  const payable = base + gstAmount;
+  return { ...item, total: base, gstAmount, tdsAmount: 0, payable };
 }
 
 function PercentCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {

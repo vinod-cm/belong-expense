@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useExpense } from "@/store/expense";
 import { useMemo, useState } from "react";
@@ -11,11 +10,12 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function PaymentVoucherCreate() {
   const navigate = useNavigate();
-  const { vendors, prs, invoices, addVoucher } = useExpense();
+  const { vendors, prs, invoices, vouchers, debitNotes, addVoucher } = useExpense();
 
   const [vendorId, setVendorId] = useState("");
+  const [prId, setPrId] = useState("");
   const [mode, setMode] = useState<"UPI" | "Cash" | "Cheque" | "Demand Draft" | "Account Transfer">("UPI");
-  const [pvNo, setPvNo] = useState("");
+  const [pvNo] = useState(() => `PV-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
   const [date, setDate] = useState("");
   const [desc, setDesc] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -23,7 +23,8 @@ export default function PaymentVoucherCreate() {
   const [payType, setPayType] = useState<"Invoice" | "Advance">("Invoice");
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
   const [invoiceAmounts, setInvoiceAmounts] = useState<Record<string, number>>({});
-  const [poAmounts, setPoAmounts] = useState<Record<string, number>>({});
+  const [advanceAmount, setAdvanceAmount] = useState<number>(0);
+  const [invoiceToAdd, setInvoiceToAdd] = useState<string>("");
 
   const [transactionNumber, setTransactionNumber] = useState("");
   const [transactionBank, setTransactionBank] = useState("");
@@ -32,67 +33,39 @@ export default function PaymentVoucherCreate() {
   const [ddDate, setDdDate] = useState("");
   const [depositSlipNumber, setDepositSlipNumber] = useState("");
 
-  const vendorInvoices = useMemo(() => invoices.filter((i) => i.vendorId === vendorId), [invoices, vendorId]);
-  const vendorPOs = useMemo(() => prs.filter((p) => p.vendorId === vendorId && p.approved && p.poNumber), [prs, vendorId]);
+  const vendorApprovedPRs = useMemo(() => prs.filter((p) => p.vendorId === vendorId && p.approved), [prs, vendorId]);
+  const prInvoices = useMemo(() => invoices.filter((i) => i.prId === prId), [invoices, prId]);
+  const selectedPR = useMemo(() => prs.find((p) => p.id === prId), [prs, prId]);
 
-  const selectedInvoices = useMemo(() => vendorInvoices.filter((i) => selectedInvoiceIds.includes(i.id)), [vendorInvoices, selectedInvoiceIds]);
+  const selectedInvoices = useMemo(() => prInvoices.filter((i) => selectedInvoiceIds.includes(i.id)), [prInvoices, selectedInvoiceIds]);
 
-  const invoiceItems = useMemo(() => {
-    const rows: { id: string; invoiceId: string; invoiceNumber: string; prId: string; name: string; qty: number; gstPct: number; tdsPct: number; amount: number }[] = [];
-    selectedInvoices.forEach((inv) => {
-      const pr = prs.find((p) => p.id === inv.prId);
-      inv.items.forEach((it) => {
-        const prItem = pr?.items.find((pi) => pi.id === it.prItemId);
-        if (prItem) {
-          const qty = Number(prItem.qty) || 0;
-          const gstPct = Number(prItem.gstRate || 0);
-          const tdsPct = Number(prItem.tdsRate || 0);
-          rows.push({
-            id: `${inv.id}-${it.prItemId}`,
-            invoiceId: inv.id,
-            invoiceNumber: inv.number,
-            prId: pr!.id,
-            name: prItem.name,
-            qty,
-            gstPct,
-            tdsPct,
-            amount: it.amount,
-          });
-        }
-      });
-    });
-    return rows;
-  }, [selectedInvoices, prs]);
+  const totalFromInvoices = useMemo(() => selectedInvoices.reduce((s, inv) => s + Number(invoiceAmounts[inv.id] || 0), 0), [selectedInvoices, invoiceAmounts]);
 
-  const totalFromInvoices = useMemo(() => {
-    return selectedInvoices.reduce((s, inv) => s + Number(invoiceAmounts[inv.id] || 0), 0);
-  }, [selectedInvoices, invoiceAmounts]);
-
-  const totalAdvance = useMemo(() => {
-    return Object.entries(poAmounts).reduce((s, [_, n]) => s + (Number(n) || 0), 0);
-  }, [poAmounts]);
-
-  const total = payType === "Invoice" ? totalFromInvoices : totalAdvance;
+  const total = payType === "Invoice" ? totalFromInvoices : Number(advanceAmount || 0);
 
   const canSave = useMemo(() => {
-    if (!pvNo || !vendorId || !date) return false;
+    if (!vendorId || !date) return false;
     if (payType === "Invoice") {
+      if (!prId) return false;
       if (selectedInvoiceIds.length === 0) return false;
       const invalid = selectedInvoices.some((inv) => {
+        const paid = vouchers.reduce((s,v)=> s + v.invoiceAmounts.filter(ia=>ia.invoiceId===inv.id).reduce((x,y)=> x + y.amount,0),0);
+        const deb = debitNotes.filter(d=>d.invoiceId===inv.id).reduce((s,d)=> s + d.amount,0);
+        const maxAmt = Math.max(0, inv.total - paid - deb);
         const amt = Number(invoiceAmounts[inv.id] || 0);
-        return amt <= 0 || amt > inv.total;
+        return amt <= 0 || amt > maxAmt;
       });
       if (invalid) return false;
     } else {
-      const anyPoSelected = Object.values(poAmounts).some((n) => Number(n) > 0);
-      if (!anyPoSelected) return false;
+      const amt = Number(advanceAmount || 0);
+      if (amt <= 0) return false;
     }
     if (mode === "UPI" && !transactionNumber) return false;
     if (mode === "Cheque" && (!transactionBank || !chequeDate || !chequeNumber)) return false;
     if (mode === "Demand Draft" && (!transactionBank || !ddDate || !depositSlipNumber)) return false;
     if (mode === "Account Transfer" && (!transactionBank || !transactionNumber)) return false;
     return total > 0;
-  }, [pvNo, vendorId, date, payType, selectedInvoiceIds, selectedInvoices, invoiceAmounts, poAmounts, mode, transactionNumber, transactionBank, chequeDate, chequeNumber, ddDate, depositSlipNumber, total]);
+  }, [vendorId, date, payType, prId, selectedInvoiceIds, selectedInvoices, invoiceAmounts, advanceAmount, mode, transactionNumber, transactionBank, chequeDate, chequeNumber, ddDate, depositSlipNumber, total]);
 
   const save = () => {
     if (!canSave) return;
@@ -118,6 +91,8 @@ export default function PaymentVoucherCreate() {
       chequeNumber: chequeNumber || undefined,
       ddDate: ddDate || undefined,
       depositSlipNumber: depositSlipNumber || undefined,
+      prId: prId || undefined,
+      source: payType,
       invoiceAmounts: invoiceAmountsArr,
       total,
     });
@@ -139,13 +114,22 @@ export default function PaymentVoucherCreate() {
         <div className="flex-1 overflow-auto p-4">
           <div className="grid gap-6">
             <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Select Vendor</h3>
+              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Basic Details</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="Payment Voucher No *">
-                  <Input value={pvNo} onChange={(e) => setPvNo(e.target.value)} />
+                <Field label="Payment Voucher No">
+                  <Input readOnly value={pvNo} />
                 </Field>
                 <Field label="Vendor *">
-                  <Select value={vendorId} onValueChange={setVendorId}>
+                  <Select
+                    value={vendorId}
+                    onValueChange={(v) => {
+                      setVendorId(v);
+                      setPrId("");
+                      setSelectedInvoiceIds([]);
+                      setInvoiceAmounts({});
+                      setAdvanceAmount(0);
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select Vendor" />
                     </SelectTrigger>
@@ -158,137 +142,124 @@ export default function PaymentVoucherCreate() {
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Select PR">
+                  <Select value={prId} onValueChange={(v) => { setPrId(v); setSelectedInvoiceIds([]); setInvoiceAmounts({}); setAdvanceAmount(0); setInvoiceToAdd(""); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Approved PRs of selected vendor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vendorApprovedPRs.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.poNumber ? `${p.poNumber} — ${p.title}` : `${p.id} — ${p.title}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
             </section>
 
             <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Select Source</h3>
+              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Source</h3>
               <div className="flex gap-3 text-sm">
                 <label className="inline-flex items-center gap-2">
                   <input type="radio" className="accent-[hsl(var(--primary))]" checked={payType === "Invoice"} onChange={() => setPayType("Invoice")} />
-                  Invoices
+                  Invoice
                 </label>
                 <label className="inline-flex items-center gap-2">
                   <input type="radio" className="accent-[hsl(var(--primary))]" checked={payType === "Advance"} onChange={() => setPayType("Advance")} />
-                  Purchase Orders (Advance)
+                  Advance Payment
                 </label>
               </div>
+
               {payType === "Invoice" ? (
-                <div className="mt-3 rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead></TableHead>
-                        <TableHead>Invoice #</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vendorInvoices.map((inv) => (
-                        <TableRow key={inv.id}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              className="accent-[hsl(var(--primary))]"
-                              checked={selectedInvoiceIds.includes(inv.id)}
-                              onChange={(e) =>
-                                setSelectedInvoiceIds((s) =>
-                                  e.target.checked ? [...s, inv.id] : s.filter((x) => x !== inv.id),
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>{inv.number}</TableCell>
-                          <TableCell>{inv.date}</TableCell>
-                          <TableCell>₹{inv.total.toLocaleString()}</TableCell>
-                        </TableRow>
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 items-end">
+                    <Field label="Select Invoice(s)">
+                      <Select value={invoiceToAdd} onValueChange={setInvoiceToAdd} disabled={!prId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={prId ? "Select Invoice" : "Select a PR first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {prInvoices.map((inv) => (
+                        <SelectItem key={inv.id} value={inv.id}>
+                          {inv.number} — ₹{(Math.max(0, inv.total - vouchers.reduce((s,v)=> s + v.invoiceAmounts.filter(ia=>ia.invoiceId===inv.id).reduce((x,y)=> x + y.amount,0),0) - debitNotes.filter(d=>d.invoiceId===inv.id).reduce((s,d)=> s + d.amount,0))).toLocaleString()}
+                        </SelectItem>
                       ))}
-                      {vendorInvoices.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
-                            Select a vendor to see invoices
-                          </TableCell>
-                        </TableRow>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <div className="sm:col-span-2 flex gap-2">
+                      <Button
+                        onClick={() => {
+                          if (!invoiceToAdd) return;
+                          setSelectedInvoiceIds((s) => (s.includes(invoiceToAdd) ? s : [...s, invoiceToAdd]));
+                          setInvoiceToAdd("");
+                        }}
+                        disabled={!invoiceToAdd}
+                      >
+                        Add Invoice
+                      </Button>
+                      {selectedInvoiceIds.length > 0 && (
+                        <div className="self-center text-sm text-muted-foreground">{selectedInvoiceIds.length} selected</div>
                       )}
-                    </TableBody>
-                  </Table>
+                    </div>
+                  </div>
+
+                  {selectedInvoices.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedInvoices.map((inv) => {
+                        const paid = vouchers.reduce((s,v)=> s + v.invoiceAmounts.filter(ia=>ia.invoiceId===inv.id).reduce((x,y)=> x + y.amount,0),0);
+                        const deb = debitNotes.filter(d=>d.invoiceId===inv.id).reduce((s,d)=> s + d.amount,0);
+                        const maxAmt = Math.max(0, inv.total - paid - deb);
+                        const val = Number(invoiceAmounts[inv.id] || 0);
+                        const over = val > maxAmt;
+                        return (
+                          <div key={inv.id} className="rounded-md border p-3 bg-white">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 items-end">
+                              <Field label="Invoice #">
+                                <Input readOnly value={inv.number} />
+                              </Field>
+                              <Field label="Outstanding Payable">
+                                <Input readOnly value={`₹${maxAmt.toLocaleString()}`} />
+                              </Field>
+                              <Field label="Payment Amount">
+                                <Input
+                                  value={invoiceAmounts[inv.id] ?? ""}
+                                  onChange={(e) => setInvoiceAmounts((s) => ({ ...s, [inv.id]: Number(e.target.value) }))}
+                                />
+                                {over && <div className="mt-1 text-sm text-destructive">Amount cannot exceed invoice amount.</div>}
+                              </Field>
+                            </div>
+                            <div className="mt-2 flex justify-end">
+                              <Button variant="secondary" onClick={() => setSelectedInvoiceIds((s) => s.filter((x) => x !== inv.id))}>Remove</Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-md border p-3 text-sm text-muted-foreground">No invoices selected</div>
+                  )}
                 </div>
               ) : (
-                <div className="mt-3 rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>PO Number</TableHead>
-                        <TableHead>PR Title</TableHead>
-                        <TableHead>Advance Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vendorPOs.map((po) => (
-                        <TableRow key={po.id}>
-                          <TableCell>{po.poNumber}</TableCell>
-                          <TableCell>{po.title}</TableCell>
-                          <TableCell className="max-w-40">
-                            <Input
-                              value={poAmounts[po.id] ?? 0}
-                              onChange={(e) =>
-                                setPoAmounts((s) => ({ ...s, [po.id]: Number(e.target.value) }))
-                              }
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {vendorPOs.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
-                            Select a vendor to see POs
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                <div className="mt-3 rounded-md border p-3 space-y-3">
+                  {prId && selectedPR?.poNumber && (
+                    <Field label="PO Number">
+                      <Input readOnly value={selectedPR.poNumber} />
+                    </Field>
+                  )}
+                  <Field label="Payment Amount">
+                    <Input value={advanceAmount} onChange={(e) => setAdvanceAmount(Number(e.target.value))} />
+                  </Field>
                 </div>
               )}
             </section>
 
-            {payType === "Invoice" && selectedInvoices.length > 0 && (
-              <section>
-                <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Selected Invoices</h3>
-                <div className="rounded-md border p-3 space-y-4">
-                  {selectedInvoices.map((inv) => {
-                    const maxAmt = inv.total;
-                    const val = Number(invoiceAmounts[inv.id] || 0);
-                    const over = val > maxAmt;
-                    return (
-                      <div key={inv.id} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <Field label="Invoice #">
-                          <Input readOnly value={inv.number} />
-                        </Field>
-                        <Field label="Payable Amount">
-                          <Input readOnly value={`₹${inv.total.toLocaleString()}`} />
-                        </Field>
-                        <Field label="Amount">
-                          <Input
-                            value={invoiceAmounts[inv.id] ?? ""}
-                            onChange={(e) =>
-                              setInvoiceAmounts((s) => ({ ...s, [inv.id]: Number(e.target.value) }))
-                            }
-                          />
-                          {over && (
-                            <div className="mt-1 text-sm text-destructive">Amount cannot exceed invoice payable.</div>
-                          )}
-                        </Field>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
 
             <section>
-              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Step 4: Total</h3>
-              <div className="rounded-md border p-3 font-semibold">Total Payment Amount: ₹{total.toLocaleString()}</div>
+              <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Total Payment Amount</h3>
+              <div className="rounded-md border p-3 font-semibold">₹{total.toLocaleString()}</div>
             </section>
 
             <section>
@@ -349,10 +320,8 @@ export default function PaymentVoucherCreate() {
                   <Label>Description</Label>
                   <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Type here" />
                 </div>
-                <div className="sm:col-span-2 rounded-md border p-3 font-semibold">Total Payment Amount: ₹{total.toLocaleString()}</div>
               </div>
             </section>
-
           </div>
         </div>
       </div>

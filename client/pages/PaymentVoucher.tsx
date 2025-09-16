@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useExpense } from "@/store/expense";
 import { Link } from "react-router-dom";
 
@@ -39,31 +38,9 @@ export default function PaymentVoucherPage() {
                     <TableCell>{vendor?.name || v.vendorId}</TableCell>
                     <TableCell>₹{v.total.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="secondary">View Details</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Payment Voucher Details</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid grid-cols-1 gap-2 text-sm">
-                            <div>PV No: {v.pvNumber}</div>
-                            <div>Payment Date: {v.date}</div>
-                            <div>Mode of Payment: {v.mode}</div>
-                            <div>Vendor: {vendor?.name || v.vendorId}</div>
-                            <div>Amount: ₹{v.total.toLocaleString()}</div>
-                            {v.transactionBank && <div>Transaction Bank: {v.transactionBank}</div>}
-                            {v.transactionNumber && <div>Transaction Number: {v.transactionNumber}</div>}
-                            {v.chequeDate && <div>Cheque Date: {v.chequeDate}</div>}
-                            {v.chequeNumber && <div>Cheque Number: {v.chequeNumber}</div>}
-                            {v.ddDate && <div>DD Date: {v.ddDate}</div>}
-                            {v.depositSlipNumber && <div>Deposit Slip Number: {v.depositSlipNumber}</div>}
-                            {v.fileName && <div>Document: {v.fileName}</div>}
-                            {v.description && <div>Description: {v.description}</div>}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Link to={`/expense/payment/${v.id}`}>
+                        <Button variant="secondary">View Details</Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 );
