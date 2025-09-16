@@ -138,10 +138,7 @@ export default function CreateInvoicePage() {
 
             <Section title="Accounting Details">
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Accounts from selected PR</div>
-                  <Button variant="secondary" onClick={addRow}>Add Account</Button>
-                </div>
+                <div className="text-sm text-muted-foreground">Accounts from selected PR</div>
                 {rows.length === 0 ? (
                   <div className="rounded-md border p-3 text-sm text-muted-foreground">No accounts added</div>
                 ) : (
@@ -189,6 +186,7 @@ export default function CreateInvoicePage() {
                     })}
                   </div>
                 )}
+                <Button variant="secondary" onClick={addRow}>+ Add Expense Account</Button>
                 <div className="mt-2 font-semibold">Total: ₹{total.toLocaleString()}</div>
                 {exceeds && (
                   <div className="text-sm text-destructive">Total exceeds remaining amount for PR (₹{remainingForPR.toLocaleString()}).</div>
