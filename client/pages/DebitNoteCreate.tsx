@@ -93,16 +93,17 @@ export default function DebitNoteCreate() {
                     </Field>
                   </div>
 
-                  <Field label="Debit Note Amount *">
-                    <Input value={amount} onChange={(e) => setAmount(e.target.value)} />
-                  </Field>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Debit Note Amount *">
+                      <Input value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    </Field>
+                    <Field label="Vendor Credit Note Reference Number">
+                      <Input value={vendorRef} onChange={(e) => setVendorRef(e.target.value)} />
+                    </Field>
+                  </div>
 
                   <Field label="Description">
                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Type here" />
-                  </Field>
-
-                  <Field label="Vendor Credit Note Reference Number">
-                    <Input value={vendorRef} onChange={(e) => setVendorRef(e.target.value)} />
                   </Field>
 
                   <div className="grid gap-2">
