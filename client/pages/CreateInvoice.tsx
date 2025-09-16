@@ -136,39 +136,62 @@ export default function CreateInvoicePage() {
             </Section>
 
             <Section title="Accounting Details">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="Expense Account *">
-                  <Select value={expenseAccount} onValueChange={setExpenseAccount}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Expense Account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allExpenseAccounts.map((acc) => (
-                        <SelectItem key={acc} value={acc}>
-                          {acc}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="GST %">
-                  <PercentCombobox value={gstPct} options={["5", "8", "12", "18"]} onChange={setGstPct} />
-                </Field>
-                <Field label="TDS %">
-                  <PercentCombobox value={tdsPct} options={["1", "2", "10"]} onChange={setTdsPct} />
-                </Field>
-                <Field label="Invoice Amount *">
-                  <Input value={baseAmount} onChange={(e) => setBaseAmount(e.target.value)} placeholder="0" />
-                </Field>
-                <Field label="GST Amount">
-                  <Input readOnly value={gst.toString()} />
-                </Field>
-                <Field label="TDS Amount">
-                  <Input readOnly value={tds.toString()} />
-                </Field>
-                <Field label="Total Amount">
-                  <Input readOnly value={total.toString()} />
-                </Field>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">Accounts from selected PR</div>
+                  <Button variant="secondary" onClick={addRow}>Add Account</Button>
+                </div>
+                {rows.length === 0 ? (
+                  <div className="rounded-md border p-3 text-sm text-muted-foreground">No accounts added</div>
+                ) : (
+                  <div className="space-y-3">
+                    {rows.map((r) => {
+                      const calc = rowCalc(r);
+                      return (
+                        <div key={r.id} className="grid grid-cols-1 gap-3 sm:grid-cols-7">
+                          <Field label="Expense Account *">
+                            <Select value={r.accountId} onValueChange={(v) => updateRow(r.id, { accountId: v })}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allowedAccounts.map((acc) => (
+                                  <SelectItem key={acc} value={acc}>{acc}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </Field>
+                          <Field label="Amount *">
+                            <Input value={r.amount} onChange={(e) => updateRow(r.id, { amount: e.target.value })} />
+                          </Field>
+                          <Field label="GST %">
+                            <PercentCombobox value={r.gstPct} options={["5","8","12","18"]} onChange={(v) => updateRow(r.id, { gstPct: v })} />
+                          </Field>
+                          <Field label="TDS %">
+                            <PercentCombobox value={r.tdsPct} options={["1","2","10"]} onChange={(v) => updateRow(r.id, { tdsPct: v })} />
+                          </Field>
+                          <Field label="GST Amt">
+                            <Input readOnly value={calc.gst.toString()} />
+                          </Field>
+                          <Field label="TDS Amt">
+                            <Input readOnly value={calc.tds.toString()} />
+                          </Field>
+                          <div className="grid gap-2">
+                            <Label>Row Total</Label>
+                            <div className="flex items-center gap-2">
+                              <Input readOnly value={calc.total.toString()} />
+                              <Button variant="secondary" onClick={() => removeRow(r.id)}>Remove</Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="mt-2 font-semibold">Total: ₹{total.toLocaleString()}</div>
+                {exceeds && (
+                  <div className="text-sm text-destructive">Total exceeds remaining amount for PR (₹{remainingForPR.toLocaleString()}).</div>
+                )}
               </div>
             </Section>
           </div>
