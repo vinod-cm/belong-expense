@@ -137,6 +137,11 @@ function EditPR({
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>(value.items);
   const { vendors } = useExpense();
+  const allExpenseAccounts = useMemo(() => {
+    const ids = new Set<string>();
+    vendors.forEach((v) => v.expenseAccounts.forEach((a) => ids.add(a)));
+    return Array.from(ids);
+  }, [vendors]);
 
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
