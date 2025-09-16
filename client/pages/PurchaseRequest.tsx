@@ -323,16 +323,12 @@ function EditPR({
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
                     </Field>
-                    <Field label="TDS Amount">
-                      <Input value={(it.tdsAmount ?? 0).toString()} readOnly />
-                    </Field>
-                    <Field label="Payable Amount">
+
+                    <Field label="Total Amount">
                       <Input
                         value={(
-                          it.payable ??
                           it.total +
-                            it.total * (Number(it.gstRate || 0) / 100) -
-                            it.total * (Number(it.tdsRate || 0) / 100)
+                            it.total * (Number(it.gstRate || 0) / 100)
                         ).toString()}
                         readOnly
                       />
@@ -585,16 +581,12 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     <Field label="GST Amount">
                       <Input value={(it.gstAmount ?? 0).toString()} readOnly />
                     </Field>
-                    <Field label="TDS Amount">
-                      <Input value={(it.tdsAmount ?? 0).toString()} readOnly />
-                    </Field>
-                    <Field label="Payable Amount">
+
+                    <Field label="Total Amount">
                       <Input
                         value={(
-                          it.payable ??
                           it.total +
-                            it.total * (Number(it.gstRate || 0) / 100) -
-                            it.total * (Number(it.tdsRate || 0) / 100)
+                            it.total * (Number(it.gstRate || 0) / 100)
                         ).toString()}
                         readOnly
                       />
@@ -754,11 +746,9 @@ function recalc(item: PRItem): PRItem {
   const unitN = toNum(item.unitPrice);
   const base = totalN || qtyN * unitN;
   const gstPct = toNum(item.gstRate || 0);
-  const tdsPct = toNum(item.tdsRate || 0);
   const gstAmount = base * (gstPct / 100);
-  const tdsAmount = base * (tdsPct / 100);
-  const payable = base + gstAmount - tdsAmount;
-  return { ...item, total: base, gstAmount, tdsAmount, payable };
+  const payable = base + gstAmount;
+  return { ...item, total: base, gstAmount, tdsAmount: 0, payable };
 }
 
 function PercentCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
