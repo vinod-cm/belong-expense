@@ -217,8 +217,7 @@ export function prTotal(pr: PR) {
       (typeof it.payable === "number"
         ? it.payable!
         : (Number(it.total) || 0) +
-          (Number(it.total) || 0) * (Number(it.gstRate || 0) / 100) -
-          (Number(it.total) || 0) * (Number(it.tdsRate || 0) / 100)),
+          (Number(it.total) || 0) * (Number(it.gstRate || 0) / 100)),
     0,
   );
 }
