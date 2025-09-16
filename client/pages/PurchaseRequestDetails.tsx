@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 export default function PurchaseRequestDetails() {
   const { id } = useParams();
-  const { prs } = useExpense();
+  const { prs, debitNotes, invoices } = useExpense();
   const pr = prs.find((p) => p.id === id);
 
   return (
@@ -169,6 +169,45 @@ export default function PurchaseRequestDetails() {
                     ))}
                   </TableBody>
                 </Table>
+              </section>
+
+              <section>
+                <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Debit Notes</h3>
+                {(() => {
+                  const notes = debitNotes.filter((d) => d.prId === pr.id);
+                  if (notes.length === 0) {
+                    return <div className="text-sm text-muted-foreground">No Debit Notes</div>;
+                  }
+                  return (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Against</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Vendor Credit Note Ref</TableHead>
+                          <TableHead>Documents</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {notes.map((d) => {
+                          const inv = d.invoiceId ? invoices.find((i) => i.id === d.invoiceId) : undefined;
+                          return (
+                            <TableRow key={d.id}>
+                              <TableCell className="font-medium">{d.title}</TableCell>
+                              <TableCell>{d.date || "—"}</TableCell>
+                              <TableCell>{inv ? `Invoice ${inv.number}` : "Against PO"}</TableCell>
+                              <TableCell>₹{Number(d.amount).toLocaleString()}</TableCell>
+                              <TableCell>{d.vendorRef || "—"}</TableCell>
+                              <TableCell>{d.fileNames && d.fileNames.length > 0 ? d.fileNames.join(", ") : "—"}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  );
+                })()}
               </section>
             </div>
           )}
