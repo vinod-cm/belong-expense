@@ -130,12 +130,27 @@ export interface PaymentVoucher {
   total: number;
 }
 
+export interface DebitNote {
+  id: string;
+  prId: string;
+  vendorId: string;
+  title: string;
+  amount: number;
+  date: string;
+  description?: string;
+  vendorRef?: string;
+  fileNames?: string[];
+  // linkage
+  invoiceId?: string; // when against invoice; undefined means against PO
+}
+
 interface ExpenseStore {
   vendors: Vendor[];
   vendorTypes: VendorType[];
   prs: PR[];
   invoices: Invoice[];
   vouchers: PaymentVoucher[];
+  debitNotes: DebitNote[];
   addVendor(v: Vendor): void;
   updateVendor(v: Vendor): void;
   removeVendor(id: string): void;
@@ -146,6 +161,7 @@ interface ExpenseStore {
   updatePR(p: PR): void;
   addInvoice(inv: Invoice): void;
   addVoucher(v: PaymentVoucher): void;
+  addDebitNote(d: DebitNote): void;
 }
 
 const ExpenseContext = createContext<ExpenseStore | null>(null);
@@ -158,6 +174,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [prs, setPRs] = useState<PR[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [vouchers, setVouchers] = useState<PaymentVoucher[]>([]);
+  const [debitNotes, setDebitNotes] = useState<DebitNote[]>([]);
 
   useEffect(() => {
     try {
@@ -169,14 +186,15 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         setPRs(data.prs || []);
         setInvoices(data.invoices || []);
         setVouchers(data.vouchers || []);
+        setDebitNotes(data.debitNotes || []);
       }
     } catch {}
   }, []);
 
   useEffect(() => {
-    const data = { vendors, vendorTypes, prs, invoices, vouchers };
+    const data = { vendors, vendorTypes, prs, invoices, vouchers, debitNotes };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [vendors, vendorTypes, prs, invoices, vouchers]);
+  }, [vendors, vendorTypes, prs, invoices, vouchers, debitNotes]);
 
   const value = useMemo<ExpenseStore>(
     () => ({
@@ -185,6 +203,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       prs,
       invoices,
       vouchers,
+      debitNotes,
       addVendor: (v) => setVendors((s) => [...s, v]),
       updateVendor: (v) =>
         setVendors((s) => s.map((x) => (x.id === v.id ? v : x))),
@@ -198,6 +217,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       updatePR: (p) => setPRs((s) => s.map((x) => (x.id === p.id ? p : x))),
       addInvoice: (inv) => setInvoices((s) => [...s, inv]),
       addVoucher: (pv) => setVouchers((s) => [...s, pv]),
+      addDebitNote: (d) => setDebitNotes((s) => [...s, d]),
     }),
     [vendors, vendorTypes, prs, invoices, vouchers],
   );
@@ -229,6 +249,24 @@ export function invoicedTotalForPR(invoices: Invoice[], prId: string) {
     .filter((i) => i.prId === prId)
     .reduce((s, i) => s + i.total, 0);
 }
+
+export function vouchersTotalForInvoice(vouchers: PaymentVoucher[], invoiceId: string) {
+  return vouchers.reduce((sum, v) => sum + v.invoiceAmounts.filter((ia) => ia.invoiceId === invoiceId).reduce((s, ia) => s + ia.amount, 0), 0);
+}
+export function debitNotesTotalForInvoice(debitNotes: DebitNote[], invoiceId: string) {
+  return debitNotes.filter((d) => d.invoiceId === invoiceId).reduce((s, d) => s + d.amount, 0);
+}
+export function debitNotesTotalForPR(debitNotes: DebitNote[], prId: string) {
+  return debitNotes.filter((d) => d.prId === prId && !d.invoiceId).reduce((s, d) => s + d.amount, 0);
+}
+export function invoiceOutstanding(invoices: Invoice[], vouchers: PaymentVoucher[], debitNotes: DebitNote[], invoiceId: string) {
+  const inv = invoices.find((i) => i.id === invoiceId);
+  if (!inv) return 0;
+  const paid = vouchersTotalForInvoice(vouchers, invoiceId);
+  const deb = debitNotesTotalForInvoice(debitNotes, invoiceId);
+  return Math.max(0, inv.total - paid - deb);
+}
+
 export function id(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
