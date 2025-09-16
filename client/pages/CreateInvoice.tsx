@@ -187,9 +187,9 @@ export default function CreateInvoicePage() {
                   </div>
                 )}
                 <Button variant="secondary" onClick={addRow}>+ Add Expense Account</Button>
-                <div className="mt-2 font-semibold">Total: ₹{total.toLocaleString()}</div>
+                <div className="mt-2 font-semibold">Total Invoice Amount: ₹{total.toLocaleString()}</div>
                 {exceeds && (
-                  <div className="text-sm text-destructive">Total exceeds remaining amount for PR (₹{remainingForPR.toLocaleString()}).</div>
+                  <div className="text-sm text-destructive">Total exceeds remaining amount for PR (���{remainingForPR.toLocaleString()}).</div>
                 )}
               </div>
             </Section>
