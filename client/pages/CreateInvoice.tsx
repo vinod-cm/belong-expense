@@ -198,9 +198,9 @@ export default function CreateInvoicePage() {
                 <Button variant="secondary" onClick={addRow}>+ Add Expense Account</Button>
                 <div className="sticky bottom-0 z-10 mt-2 border-t bg-white pt-2">
                   <div className="font-semibold">Total Invoice Amount: ₹{total.toLocaleString()}</div>
-                  {exceeds && (
-                    <div className="text-sm text-destructive">Total exceeds remaining amount for PR (₹{remainingForPR.toLocaleString()}).</div>
-                  )}
+                  <div className={`text-sm text-destructive ${exceeds ? "visible" : "invisible"}`}>
+                    Total exceeds remaining amount for PR (₹{remainingForPR.toLocaleString()}).
+                  </div>
                 </div>
               </div>
             </Section>
@@ -250,7 +250,7 @@ function PercentCombobox({ value, onChange, options }: { value: string; onChange
           </Button>
         </PopoverTrigger>
       </div>
-      <PopoverContent align="end" className="p-0 w-56">
+      <PopoverContent side="bottom" align="end" avoidCollisions={false} className="p-0 w-56">
         <Command>
           <CommandInput placeholder="Search %" />
           <CommandEmpty>No options</CommandEmpty>
