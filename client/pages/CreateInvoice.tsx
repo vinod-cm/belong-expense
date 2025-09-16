@@ -142,42 +142,51 @@ export default function CreateInvoicePage() {
                 {rows.length === 0 ? (
                   <div className="rounded-md border p-3 text-sm text-muted-foreground">No accounts added</div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="max-h-[420px] overflow-y-auto pr-1 space-y-3">
                     {rows.map((r) => {
                       const calc = rowCalc(r);
                       return (
-                        <div key={r.id} className="grid grid-cols-1 gap-3 sm:grid-cols-7">
-                          <Field label="Expense Account *">
-                            <Select value={r.accountId} onValueChange={(v) => updateRow(r.id, { accountId: v })}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {allowedAccounts.map((acc) => (
-                                  <SelectItem key={acc} value={acc}>{acc}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </Field>
-                          <Field label="Amount *">
-                            <Input value={r.amount} onChange={(e) => updateRow(r.id, { amount: e.target.value })} />
-                          </Field>
-                          <Field label="GST %">
-                            <PercentCombobox value={r.gstPct} options={["5","8","12","18"]} onChange={(v) => updateRow(r.id, { gstPct: v })} />
-                          </Field>
-                          <Field label="TDS %">
-                            <PercentCombobox value={r.tdsPct} options={["1","2","10"]} onChange={(v) => updateRow(r.id, { tdsPct: v })} />
-                          </Field>
-                          <Field label="GST Amt">
-                            <Input readOnly value={calc.gst.toString()} />
-                          </Field>
-                          <Field label="TDS Amt">
-                            <Input readOnly value={calc.tds.toString()} />
-                          </Field>
-                          <div className="grid gap-2">
-                            <Label>Payable Amount</Label>
-                            <div className="flex items-center gap-2">
+                        <div key={r.id} className="rounded-md border bg-white p-3 shadow-sm">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <Field label="Expense Account *">
+                              <Select value={r.accountId} onValueChange={(v) => updateRow(r.id, { accountId: v })}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {allowedAccounts.map((acc) => (
+                                    <SelectItem key={acc} value={acc}>{acc}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </Field>
+                            <Field label="Amount *">
+                              <Input value={r.amount} onChange={(e) => updateRow(r.id, { amount: e.target.value })} />
+                            </Field>
+                          </div>
+                          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="grid grid-cols-2 gap-3">
+                              <Field label="GST %">
+                                <PercentCombobox value={r.gstPct} options={["5","8","12","18"]} onChange={(v) => updateRow(r.id, { gstPct: v })} />
+                              </Field>
+                              <Field label="GST Amt">
+                                <Input readOnly value={calc.gst.toString()} />
+                              </Field>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <Field label="TDS %">
+                                <PercentCombobox value={r.tdsPct} options={["1","2","10"]} onChange={(v) => updateRow(r.id, { tdsPct: v })} />
+                              </Field>
+                              <Field label="TDS Amt">
+                                <Input readOnly value={calc.tds.toString()} />
+                              </Field>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 items-end">
+                            <Field label="Payable Amount">
                               <Input readOnly value={calc.total.toString()} />
+                            </Field>
+                            <div className="flex sm:justify-end">
                               <Button variant="secondary" onClick={() => removeRow(r.id)}>Remove</Button>
                             </div>
                           </div>
@@ -187,10 +196,12 @@ export default function CreateInvoicePage() {
                   </div>
                 )}
                 <Button variant="secondary" onClick={addRow}>+ Add Expense Account</Button>
-                <div className="mt-2 font-semibold">Total Invoice Amount: ₹{total.toLocaleString()}</div>
-                {exceeds && (
-                  <div className="text-sm text-destructive">Total exceeds remaining amount for PR (���{remainingForPR.toLocaleString()}).</div>
-                )}
+                <div className="sticky bottom-0 z-10 mt-2 border-t bg-white pt-2">
+                  <div className="font-semibold">Total Invoice Amount: ₹{total.toLocaleString()}</div>
+                  {exceeds && (
+                    <div className="text-sm text-destructive">Total exceeds remaining amount for PR (₹{remainingForPR.toLocaleString()}).</div>
+                  )}
+                </div>
               </div>
             </Section>
           </div>
