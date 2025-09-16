@@ -94,9 +94,6 @@ export default function CreateInvoicePage() {
           <div className="grid gap-6">
             <Section title="Invoice Details">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Invoice Number *">
-                  <Input value={number} onChange={(e) => setNumber(e.target.value)} />
-                </Field>
                 <Field label="Select PO Number *">
                   <Select
                     value={prId}
@@ -118,6 +115,9 @@ export default function CreateInvoicePage() {
                 </Field>
                 <Field label="Vendor Name">
                   <Input readOnly value={vendor?.name || "—"} />
+                </Field>
+                <Field label="Invoice Number *">
+                  <Input value={number} onChange={(e) => setNumber(e.target.value)} />
                 </Field>
                 <Field label="Invoice Date *">
                   <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
