@@ -2,29 +2,19 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useExpense, id, invoicedTotalForPR, prTotal } from "@/store/expense";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useExpense, id } from "@/store/expense";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function CreateInvoicePage() {
-  const { prs, vendors, invoices, addInvoice } = useExpense();
+  const { prs, vendors, addInvoice } = useExpense();
   const navigate = useNavigate();
+
+  const approvedPOs = useMemo(() => prs.filter((p) => p.approved && p.poNumber), [prs]);
 
   const [number, setNumber] = useState("");
   const [prId, setPrId] = useState("");
@@ -32,103 +22,50 @@ export default function CreateInvoicePage() {
   const [dueDate, setDueDate] = useState("");
   const [desc, setDesc] = useState("");
   const [doc, setDoc] = useState<File | null>(null);
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
-  const [removedItemIds, setRemovedItemIds] = useState<string[]>([]);
-  const [amounts, setAmounts] = useState<Record<string, number>>({});
 
-  const pr = useMemo(() => prs.find((p) => p.id === prId), [prs, prId]);
-  const vendor = useMemo(
-    () => vendors.find((v) => v.id === pr?.vendorId),
-    [vendors, pr],
-  );
+  const pr = useMemo(() => approvedPOs.find((p) => p.id === prId), [approvedPOs, prId]);
+  const vendor = useMemo(() => vendors.find((v) => v.id === pr?.vendorId), [vendors, pr]);
 
-  const allAccounts = useMemo(
-    () => Array.from(new Set(pr?.items.map((i) => i.accountId) || [])),
-    [pr],
-  );
+  // Expense accounts: show dropdown of all accounts (unique ids) across vendors
+  const allExpenseAccounts = useMemo(() => {
+    const ids = new Set<string>();
+    vendors.forEach((v) => v.expenseAccounts.forEach((a) => ids.add(a)));
+    return Array.from(ids);
+  }, [vendors]);
+  const [expenseAccount, setExpenseAccount] = useState("");
 
-  const selectedItems = useMemo(() => {
-    if (!pr) return [] as typeof pr.items;
-    return pr.items.filter(
-      (i) =>
-        selectedAccounts.includes(i.accountId) &&
-        !removedItemIds.includes(i.id),
-    );
-  }, [pr, selectedAccounts, removedItemIds]);
+  // Amounts and taxes
+  const [baseAmount, setBaseAmount] = useState<string>("");
+  const [gstPct, setGstPct] = useState<string>("");
+  const [tdsPct, setTdsPct] = useState<string>("");
 
-  const totalSelected = useMemo(() => {
-    return selectedItems.reduce((s, it) => {
-      const base = Number(it.total) || 0;
-      const gstPct = Number(it.gstRate || 0);
-      const tdsPct = Number(it.tdsRate || 0);
-      const maxAmt = Number(
-        it.payable ?? base + (base * gstPct) / 100 - (base * tdsPct) / 100,
-      );
-      const entered = Number(amounts[it.id] ?? maxAmt);
-      return s + entered;
-    }, 0);
-  }, [selectedItems, amounts]);
+  const base = Number(baseAmount) || 0;
+  const gst = base * ((Number(gstPct) || 0) / 100);
+  const tds = base * ((Number(tdsPct) || 0) / 100);
+  const total = base + gst - tds;
 
-  const remainingForPR = useMemo(() => {
-    if (!pr) return 0;
-    const remaining = prTotal(pr) - invoicedTotalForPR(invoices, pr.id);
-    return Math.max(0, remaining);
-  }, [pr, invoices]);
-
-  const anyOver = useMemo(() => {
-    return selectedItems.some((it) => {
-      const base = Number(it.total) || 0;
-      const gstPct = Number(it.gstRate || 0);
-      const tdsPct = Number(it.tdsRate || 0);
-      const maxAmt = Number(
-        it.payable ?? base + (base * gstPct) / 100 - (base * tdsPct) / 100,
-      );
-      const entered = Number(amounts[it.id] ?? maxAmt);
-      return entered > maxAmt;
-    });
-  }, [selectedItems, amounts]);
-
-  const error = !pr
-    ? ""
-    : anyOver
-      ? "One or more item amounts exceed payable from PR."
-      : totalSelected > remainingForPR
-        ? `Invoice exceeds remaining PR amount (₹${remainingForPR.toLocaleString()}).`
-        : "";
+  const canSave =
+    !!number.trim() &&
+    !!pr &&
+    !!date &&
+    !!dueDate &&
+    !!expenseAccount &&
+    base > 0;
 
   const save = () => {
-    if (
-      !number.trim() ||
-      !pr ||
-      !date ||
-      !dueDate ||
-      selectedItems.length === 0 ||
-      totalSelected <= 0 ||
-      !!error
-    )
-      return;
-    const inv = {
+    if (!canSave) return;
+    addInvoice({
       id: id("INV"),
-      prId: pr.id,
-      vendorId: pr.vendorId,
+      prId: pr!.id,
+      vendorId: pr!.vendorId,
       number: number.trim(),
       date,
       dueDate,
       description: desc || undefined,
       documentName: doc?.name,
-      items: selectedItems.map((it) => {
-        const base = Number(it.total) || 0;
-        const gstPct = Number(it.gstRate || 0);
-        const tdsPct = Number(it.tdsRate || 0);
-        const maxAmt = Number(
-          it.payable ?? base + (base * gstPct) / 100 - (base * tdsPct) / 100,
-        );
-        const entered = Number(amounts[it.id] ?? maxAmt);
-        return { prItemId: it.id, amount: entered };
-      }),
-      total: totalSelected,
-    };
-    addInvoice(inv);
+      items: [],
+      total,
+    });
     navigate("/expense/invoices");
   };
 
@@ -141,17 +78,7 @@ export default function CreateInvoicePage() {
             <Link to="/expense/invoices">
               <Button variant="secondary">Cancel</Button>
             </Link>
-            <Button
-              onClick={save}
-              disabled={
-                !number ||
-                !pr ||
-                !date ||
-                !dueDate ||
-                selectedItems.length === 0 ||
-                !!error
-              }
-            >
+            <Button onClick={save} disabled={!canSave}>
               Save
             </Button>
           </div>
@@ -161,45 +88,35 @@ export default function CreateInvoicePage() {
             <Section title="Invoice Details">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Invoice Number *">
-                  <Input
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                  />
+                  <Input value={number} onChange={(e) => setNumber(e.target.value)} />
                 </Field>
-                <Field label="Select PR *">
+                <Field label="Select PO Number *">
                   <Select
                     value={prId}
                     onValueChange={(v) => {
                       setPrId(v);
-                      setSelectedAccounts([]);
-                      setRemovedItemIds([]);
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select PR" />
+                      <SelectValue placeholder="Select PO" />
                     </SelectTrigger>
                     <SelectContent>
-                      {prs.map((p) => (
+                      {approvedPOs.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
-                          {p.id} — {p.title}
+                          {p.poNumber}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Vendor Name">
+                  <Input readOnly value={vendor?.name || "—"} />
+                </Field>
                 <Field label="Invoice Date *">
-                  <Input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
+                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                 </Field>
                 <Field label="Due Date *">
-                  <Input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                  />
+                  <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
                 </Field>
                 <div className="sm:col-span-2 grid gap-2">
                   <Label>Invoice Document</Label>
@@ -207,124 +124,45 @@ export default function CreateInvoicePage() {
                 </div>
                 <div className="sm:col-span-2 grid gap-2">
                   <Label>Description</Label>
-                  <Textarea
-                    value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                    placeholder="Type here"
-                  />
+                  <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Type here" />
                 </div>
               </div>
             </Section>
 
-            <Section title="PR Context">
+            <Section title="Accounting Details">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="PR Title">
-                  <Input readOnly value={pr?.title || "—"} />
+                <Field label="Expense Account *">
+                  <Select value={expenseAccount} onValueChange={setExpenseAccount}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Expense Account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allExpenseAccounts.map((acc) => (
+                        <SelectItem key={acc} value={acc}>
+                          {acc}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
-                <Field label="PO Number">
-                  <Input readOnly value={pr?.poNumber || "—"} />
+                <Field label="GST %">
+                  <PercentCombobox value={gstPct} options={["5", "8", "12", "18"]} onChange={setGstPct} />
                 </Field>
-                <Field label="Vendor Name">
-                  <Input readOnly value={vendor?.name || "—"} />
+                <Field label="TDS %">
+                  <PercentCombobox value={tdsPct} options={["1", "2", "10"]} onChange={setTdsPct} />
                 </Field>
-              </div>
-            </Section>
-
-            <Section title="Select Expense Accounts">
-              <div className="flex flex-wrap gap-2">
-                {allAccounts.map((acc) => (
-                  <label
-                    key={acc}
-                    className="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      className="accent-[hsl(var(--primary))]"
-                      checked={selectedAccounts.includes(acc)}
-                      onChange={(e) =>
-                        setSelectedAccounts((s) =>
-                          e.target.checked
-                            ? [...s, acc]
-                            : s.filter((x) => x !== acc),
-                        )
-                      }
-                    />
-                    {acc}
-                  </label>
-                ))}
-              </div>
-              <div className="mt-3 rounded-md border p-3 text-sm">
-                <div className="font-medium">Items</div>
-                {selectedItems.length === 0 ? (
-                  <div className="text-muted-foreground">No items selected</div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Account</TableHead>
-                        <TableHead>Base Amount</TableHead>
-                        <TableHead>GST %</TableHead>
-                        <TableHead>TDS %</TableHead>
-                        <TableHead>Payable Amount (from PR)</TableHead>
-                        <TableHead>Enter Amount</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedItems.map((it) => {
-                        const base = Number(it.total) || 0;
-                        const gstPct = Number(it.gstRate || 0);
-                        const tdsPct = Number(it.tdsRate || 0);
-                        const amt = Number(
-                          it.payable ??
-                            base +
-                              (base * gstPct) / 100 -
-                              (base * tdsPct) / 100,
-                        );
-                        return (
-                          <TableRow key={it.id}>
-                            <TableCell className="font-medium">
-                              {it.name}
-                            </TableCell>
-                            <TableCell>{it.accountId}</TableCell>
-                            <TableCell>₹{base.toLocaleString()}</TableCell>
-                            <TableCell>{gstPct}%</TableCell>
-                            <TableCell>{tdsPct}%</TableCell>
-                            <TableCell>₹{amt.toLocaleString()}</TableCell>
-                            <TableCell className="max-w-40">
-                              <Input
-                                value={amounts[it.id] ?? amt}
-                                onChange={(e) =>
-                                  setAmounts((s) => ({
-                                    ...s,
-                                    [it.id]: Number(e.target.value),
-                                  }))
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="secondary"
-                                onClick={() =>
-                                  setRemovedItemIds((s) => [...s, it.id])
-                                }
-                              >
-                                Remove
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                )}
-                <div className="mt-2 font-semibold">
-                  Total: ₹{totalSelected.toLocaleString()}
-                </div>
-                {error && (
-                  <div className="mt-1 text-sm text-destructive">{error}</div>
-                )}
+                <Field label="Invoice Amount *">
+                  <Input value={baseAmount} onChange={(e) => setBaseAmount(e.target.value)} placeholder="0" />
+                </Field>
+                <Field label="GST Amount">
+                  <Input readOnly value={gst.toString()} />
+                </Field>
+                <Field label="TDS Amount">
+                  <Input readOnly value={tds.toString()} />
+                </Field>
+                <Field label="Total Amount">
+                  <Input readOnly value={total.toString()} />
+                </Field>
               </div>
             </Section>
           </div>
@@ -334,29 +172,15 @@ export default function CreateInvoicePage() {
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">
-        {title}
-      </h3>
+      <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">{title}</h3>
       <div className="rounded-lg border bg-white p-4">{children}</div>
     </section>
   );
 }
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-2">
       <Label>{label}</Label>
@@ -370,11 +194,38 @@ function FileBox({ onChange }: { onChange: (file: File | null) => void }) {
       <div className="pointer-events-none select-none text-center">
         <div className="font-medium text-foreground">Upload</div>
       </div>
-      <input
-        type="file"
-        className="hidden"
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
-      />
+      <input type="file" className="hidden" onChange={(e) => onChange(e.target.files?.[0] || null)} />
     </label>
+  );
+}
+
+function PercentCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <div className="relative">
+        <Input value={value || ""} onChange={(e) => onChange(e.target.value)} onFocus={() => setOpen(true)} className="pr-8" placeholder="0" />
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">
+            ▼
+          </Button>
+        </PopoverTrigger>
+      </div>
+      <PopoverContent align="end" className="p-0 w-56">
+        <Command>
+          <CommandInput placeholder="Search %" />
+          <CommandEmpty>No options</CommandEmpty>
+          <CommandList>
+            <CommandGroup>
+              {options.map((o) => (
+                <CommandItem key={o} onSelect={() => { onChange(o); setOpen(false); }}>
+                  {o}%
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
