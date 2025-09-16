@@ -140,6 +140,7 @@ export interface DebitNote {
   description?: string;
   vendorRef?: string;
   fileNames?: string[];
+  notes?: string;
   // linkage
   invoiceId?: string; // when against invoice; undefined means against PO
 }
