@@ -17,13 +17,12 @@ export default function DebitNoteCreate() {
   const prInvoices = useMemo(() => invoices.filter((i) => i.prId === pr?.id), [invoices, pr?.id]);
 
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [invoiceId, setInvoiceId] = useState<string>(prInvoices.length > 0 ? prInvoices[0].id : "");
   const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState("");
   const [vendorRef, setVendorRef] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
-  const [notes, setNotes] = useState("");
 
   const mode: "invoice" | "po" = prInvoices.length > 0 ? "invoice" : "po";
 
@@ -42,7 +41,6 @@ export default function DebitNoteCreate() {
       description: description || undefined,
       vendorRef: vendorRef || undefined,
       fileNames,
-      notes: notes || undefined,
       invoiceId: mode === "invoice" ? invoiceId || undefined : undefined,
     });
     navigate(`/expense/purchase/${pr.id}`);
@@ -67,43 +65,47 @@ export default function DebitNoteCreate() {
             <div className="grid gap-6">
               <section>
                 <h3 className="mb-3 border-l-4 border-primary pl-3 text-base font-semibold">Debit Note Details</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Field label="Title *">
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-                  </Field>
-                  <Field label="Date *">
-                    <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                  </Field>
-                  <Field label="Invoice / Against PO *">
-                    {mode === "invoice" ? (
-                      <Select value={invoiceId} onValueChange={setInvoiceId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Invoice" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {prInvoices.map((inv) => (
-                            <SelectItem key={inv.id} value={inv.id}>
-                              {inv.number} — ₹{inv.total.toLocaleString()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input readOnly value="Against PO" />
-                    )}
-                  </Field>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <Field label="Invoice / PO Selection *">
+                      {mode === "invoice" ? (
+                        <Select value={invoiceId} onValueChange={setInvoiceId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Invoice" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {prInvoices.map((inv) => (
+                              <SelectItem key={inv.id} value={inv.id}>
+                                {inv.number} — ₹{inv.total.toLocaleString()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input readOnly value="Against PO" />
+                      )}
+                    </Field>
+                    <Field label="Title *">
+                      <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                    </Field>
+                    <Field label="Date *">
+                      <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                    </Field>
+                  </div>
+
                   <Field label="Debit Note Amount *">
                     <Input value={amount} onChange={(e) => setAmount(e.target.value)} />
                   </Field>
-                  <div className="sm:col-span-2">
-                    <Field label="Description">
-                      <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Type here" />
-                    </Field>
-                  </div>
-                  <Field label="Vendor Reference Number">
+
+                  <Field label="Description">
+                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Type here" />
+                  </Field>
+
+                  <Field label="Vendor Credit Note Reference Number">
                     <Input value={vendorRef} onChange={(e) => setVendorRef(e.target.value)} />
                   </Field>
-                  <div className="sm:col-span-2 grid gap-2">
+
+                  <div className="grid gap-2">
                     <Label>Upload Supporting Documents</Label>
                     <label className="grid h-28 place-items-center rounded-md border-2 border-dashed text-sm text-muted-foreground">
                       <div className="pointer-events-none select-none text-center">
@@ -111,11 +113,6 @@ export default function DebitNoteCreate() {
                       </div>
                       <input type="file" multiple className="hidden" onChange={(e) => setFiles(e.target.files)} />
                     </label>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Field label="Notes">
-                      <Textarea placeholder="Any additional notes" value={notes} onChange={(e)=> setNotes(e.target.value)} />
-                    </Field>
                   </div>
                 </div>
               </section>
