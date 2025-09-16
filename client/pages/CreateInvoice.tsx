@@ -26,13 +26,15 @@ export default function CreateInvoicePage() {
   const pr = useMemo(() => approvedPOs.find((p) => p.id === prId), [approvedPOs, prId]);
   const vendor = useMemo(() => vendors.find((v) => v.id === pr?.vendorId), [vendors, pr]);
 
-  // Expense accounts: show dropdown of all accounts (unique ids) across vendors
-  const allExpenseAccounts = useMemo(() => {
-    const ids = new Set<string>();
-    vendors.forEach((v) => v.expenseAccounts.forEach((a) => ids.add(a)));
-    return Array.from(ids);
-  }, [vendors]);
-  const [expenseAccount, setExpenseAccount] = useState("");
+  // Expense accounts limited to those used in the selected PR
+  const allowedAccounts = useMemo(() => {
+    return Array.from(new Set(pr?.items.map((i) => i.accountId) || []));
+  }, [pr]);
+  type Row = { id: string; accountId: string; amount: string; gstPct: string; tdsPct: string };
+  const [rows, setRows] = useState<Row[]>([]);
+  const addRow = () => setRows((s) => [...s, { id: id("ROW"), accountId: "", amount: "", gstPct: "", tdsPct: "" }]);
+  const removeRow = (rid: string) => setRows((s) => s.filter((r) => r.id !== rid));
+  const updateRow = (rid: string, patch: Partial<Row>) => setRows((s) => s.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
 
   // Amounts and taxes
   const [baseAmount, setBaseAmount] = useState<string>("");
