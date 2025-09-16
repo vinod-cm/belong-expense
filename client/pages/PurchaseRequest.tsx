@@ -392,6 +392,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const [requestDate, setRequestDate] = useState("");
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>([emptyItem()]);
+  const { vendors } = useExpense();
 
   const save = () => {
     if (!title.trim() || !vendorId || !requestDate || items.length === 0)
