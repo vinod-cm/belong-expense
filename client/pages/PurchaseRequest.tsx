@@ -238,9 +238,9 @@ function EditPR({
                           <SelectValue placeholder="Account" />
                         </SelectTrigger>
                         <SelectContent>
-                          {ACCOUNTS.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.name}
+                          {allExpenseAccounts.map((acc) => (
+                            <SelectItem key={acc} value={acc}>
+                              {acc}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -502,9 +502,9 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                           <SelectValue placeholder="Account" />
                         </SelectTrigger>
                         <SelectContent>
-                          {ACCOUNTS.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.name}
+                          {allExpenseAccounts.map((acc) => (
+                            <SelectItem key={acc} value={acc}>
+                              {acc}
                             </SelectItem>
                           ))}
                         </SelectContent>
