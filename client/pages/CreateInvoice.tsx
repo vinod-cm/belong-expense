@@ -36,15 +36,17 @@ export default function CreateInvoicePage() {
   const removeRow = (rid: string) => setRows((s) => s.filter((r) => r.id !== rid));
   const updateRow = (rid: string, patch: Partial<Row>) => setRows((s) => s.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
 
-  // Amounts and taxes
-  const [baseAmount, setBaseAmount] = useState<string>("");
-  const [gstPct, setGstPct] = useState<string>("");
-  const [tdsPct, setTdsPct] = useState<string>("");
-
-  const base = Number(baseAmount) || 0;
-  const gst = base * ((Number(gstPct) || 0) / 100);
-  const tds = base * ((Number(tdsPct) || 0) / 100);
-  const total = base + gst - tds;
+  // Row computations and totals
+  const rowCalc = (r: Row) => {
+    const base = Number(r.amount) || 0;
+    const gst = base * ((Number(r.gstPct) || 0) / 100);
+    const tds = base * ((Number(r.tdsPct) || 0) / 100);
+    const total = base + gst - tds;
+    return { base, gst, tds, total };
+  };
+  const total = useMemo(() => rows.reduce((s, r) => s + rowCalc(r).total, 0), [rows]);
+  const remainingForPR = useMemo(() => (pr ? Math.max(0, prTotal(pr) - invoicedTotalForPR(invoices, pr.id)) : 0), [pr, invoices]);
+  const exceeds = !!pr && total > remainingForPR;
 
   const canSave =
     !!number.trim() &&
