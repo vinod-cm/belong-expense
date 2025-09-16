@@ -53,8 +53,10 @@ export default function CreateInvoicePage() {
     !!pr &&
     !!date &&
     !!dueDate &&
-    !!expenseAccount &&
-    base > 0;
+    rows.length > 0 &&
+    rows.every((r) => r.accountId && Number(r.amount) > 0) &&
+    !exceeds &&
+    total > 0;
 
   const save = () => {
     if (!canSave) return;
