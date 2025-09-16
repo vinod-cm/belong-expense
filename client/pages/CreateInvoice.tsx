@@ -31,8 +31,9 @@ export default function CreateInvoicePage() {
     return Array.from(new Set(pr?.items.map((i) => i.accountId) || []));
   }, [pr]);
   type Row = { id: string; accountId: string; amount: string; gstPct: string; tdsPct: string };
-  const [rows, setRows] = useState<Row[]>([]);
-  const addRow = () => setRows((s) => [...s, { id: id("ROW"), accountId: "", amount: "", gstPct: "", tdsPct: "" }]);
+  const emptyRow = (): Row => ({ id: id("ROW"), accountId: "", amount: "", gstPct: "", tdsPct: "" });
+  const [rows, setRows] = useState<Row[]>([emptyRow()]);
+  const addRow = () => setRows((s) => [...s, emptyRow()]);
   const removeRow = (rid: string) => setRows((s) => s.filter((r) => r.id !== rid));
   const updateRow = (rid: string, patch: Partial<Row>) => setRows((s) => s.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
 
