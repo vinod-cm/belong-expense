@@ -124,7 +124,6 @@ export default function PaymentVoucherCreate() {
                       setPrId("");
                       setSelectedInvoiceIds([]);
                       setInvoiceAmounts({});
-                      setPoAmount(0);
                       setAdvanceAmount(0);
                     }}
                   >
