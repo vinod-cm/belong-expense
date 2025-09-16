@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { useExpense, id } from "@/store/expense";
+import { useExpense, id, prTotal, invoicedTotalForPR } from "@/store/expense";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
