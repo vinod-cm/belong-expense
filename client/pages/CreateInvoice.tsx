@@ -243,7 +243,7 @@ function PercentCombobox({ value, onChange, options }: { value: string; onChange
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <div className="relative">
-        <Input value={value || ""} onChange={(e) => onChange(e.target.value)} onFocus={() => setOpen(true)} className="pr-8" placeholder="0" />
+        <Input value={value || ""} onChange={(e) => onChange(e.target.value)} className="pr-8" placeholder="0" />
         <PopoverTrigger asChild>
           <Button variant="outline" className="absolute right-1 top-1.5 h-7 px-2">
             ▼
