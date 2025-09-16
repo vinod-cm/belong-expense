@@ -123,6 +123,9 @@ export interface PaymentVoucher {
   chequeNumber?: string;
   ddDate?: string;
   depositSlipNumber?: string;
+  // Optional linkage/context
+  prId?: string; // Linked PR when applicable
+  source?: "Invoice" | "PO" | "None"; // Payment source context
   invoiceAmounts: PaymentInvoiceAmount[];
   total: number;
 }
