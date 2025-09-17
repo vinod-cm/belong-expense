@@ -30,8 +30,8 @@ export default function CreateInvoicePage() {
   const allowedAccounts = useMemo(() => {
     return Array.from(new Set(pr?.items.map((i) => i.accountId) || []));
   }, [pr]);
-  type Row = { id: string; accountId: string; amount: string; gstPct: string; tdsPct: string };
-  const emptyRow = (): Row => ({ id: id("ROW"), accountId: "", amount: "", gstPct: "", tdsPct: "" });
+  type Row = { id: string; accountId: string; amount: string; hsnCode: string; tdsSection: string; gstPct: string; tdsPct: string };
+  const emptyRow = (): Row => ({ id: id("ROW"), accountId: "", amount: "", hsnCode: "", tdsSection: "", gstPct: "", tdsPct: "" });
   const [rows, setRows] = useState<Row[]>([emptyRow()]);
   const addRow = () => setRows((s) => [...s, emptyRow()]);
   const removeRow = (rid: string) => setRows((s) => s.filter((r) => r.id !== rid));
@@ -55,7 +55,7 @@ export default function CreateInvoicePage() {
     !!date &&
     !!dueDate &&
     rows.length > 0 &&
-    rows.every((r) => r.accountId && Number(r.amount) > 0) &&
+    rows.every((r) => r.accountId && Number(r.amount) > 0 && !!r.hsnCode && !!r.tdsSection) &&
     !exceeds &&
     total > 0;
 
@@ -162,6 +162,12 @@ export default function CreateInvoicePage() {
                             </Field>
                             <Field label="Amount *">
                               <Input value={r.amount} onChange={(e) => updateRow(r.id, { amount: e.target.value })} />
+                            </Field>
+                            <Field label="HSN Code *">
+                              <Input value={r.hsnCode} onChange={(e) => updateRow(r.id, { hsnCode: e.target.value })} />
+                            </Field>
+                            <Field label="TDS Section Code *">
+                              <Input value={r.tdsSection} onChange={(e) => updateRow(r.id, { tdsSection: e.target.value })} />
                             </Field>
                           </div>
                           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
