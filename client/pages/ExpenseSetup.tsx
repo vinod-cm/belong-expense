@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
+import { useExpense } from "@/store/expense";
 
 interface Group {
   id: string;
@@ -32,7 +33,7 @@ export default function ExpenseSetup() {
   const [query, setQuery] = useState("");
 
   const [groups, setGroups] = useState<Group[]>([]);
-  const [accounts, setAccounts] = useState<ExpenseAccount[]>([]);
+  const { accounts, addAccount, updateAccount, removeAccount } = useExpense();
 
   const filteredGroups = useMemo(
     () =>
@@ -90,8 +91,8 @@ export default function ExpenseSetup() {
             ) : (
               <AddAccountButton
                 groups={groups}
-                accounts={accounts}
-                onSave={(a) => setAccounts((s) => [...s, a])}
+                accounts={accounts as any}
+                onSave={(a) => addAccount(a as any)}
               />
             )}
           </div>
@@ -110,13 +111,11 @@ export default function ExpenseSetup() {
           />
         ) : (
           <AccountsTable
-            items={filteredAccounts}
+            items={filteredAccounts as any}
             groups={groups}
-            onToggle={(id) =>
-              setAccounts((s) => s.map((a) => (a.id === id ? { ...a, active: !a.active } : a)))
-            }
-            onDelete={(id) => setAccounts((s) => s.filter((a) => a.id !== id))}
-            onEdit={(a) => setAccounts((s) => s.map((it) => (it.id === a.id ? a : it)))}
+            onToggle={(id) => updateAccount({ ...(accounts.find(a=>a.id===id) as any), active: !(accounts.find(a=>a.id===id) as any)?.active })}
+            onDelete={(id) => removeAccount(id)}
+            onEdit={(a) => updateAccount(a as any)}
           />
         )}
       </div>
