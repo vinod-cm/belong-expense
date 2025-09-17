@@ -148,10 +148,7 @@ export default function Vendors() {
                   <TableCell>{(v as any).serviceType || "—"}</TableCell>
                   <TableCell>
                     {v.expenseAccounts
-                      .map(
-                        (x) =>
-                          expenseOptions.find((o) => o.id === x)?.name || x,
-                      )
+                      .map((x) => (accounts.find((a)=>a.id===x)?.name || x))
                       .join(", ")}
                   </TableCell>
                   <TableCell>{v.startDate || "—"}</TableCell>
