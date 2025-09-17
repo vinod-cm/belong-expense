@@ -170,8 +170,8 @@ export default function PaymentVoucherCreate() {
                   Invoice
                 </label>
                 <label className="inline-flex items-center gap-2">
-                  <input type="radio" className="accent-[hsl(var(--primary))]" checked={payType === "Advance"} onChange={() => setPayType("Advance")} />
-                  Advance Payment
+                  <input type="radio" className="accent-[hsl(var(--primary))]" checked={payType === "General"} onChange={() => setPayType("General")} />
+                  General Payment
                 </label>
               </div>
 
