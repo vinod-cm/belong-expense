@@ -21,7 +21,7 @@ export default function PaymentVoucherCreate() {
   const [desc, setDesc] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const [payType, setPayType] = useState<"Invoice" | "Advance">("Invoice");
+  const [payType, setPayType] = useState<"Invoice" | "General">("Invoice");
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
   const [invoiceAmounts, setInvoiceAmounts] = useState<Record<string, number>>({});
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
