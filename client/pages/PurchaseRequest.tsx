@@ -245,7 +245,7 @@ function EditPR({
                         <SelectContent>
                           {allExpenseAccounts.map((acc) => (
                             <SelectItem key={acc} value={acc}>
-                              {acc}
+                              {(useExpense().accounts.find((a)=>a.id===acc)?.name || acc)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -511,7 +511,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                         <SelectContent>
                           {allExpenseAccounts.map((acc) => (
                             <SelectItem key={acc} value={acc}>
-                              {acc}
+                              {(useExpense().accounts.find((a)=>a.id===acc)?.name || acc)}
                             </SelectItem>
                           ))}
                         </SelectContent>
