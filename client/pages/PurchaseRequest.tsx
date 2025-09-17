@@ -707,11 +707,10 @@ function emptyItem(): PRItem {
     unitPrice: 0,
     total: 0,
     gstRate: "0",
-    tdsRate: "0",
     gstAmount: 0,
     tdsAmount: 0,
     payable: 0,
-  };
+  } as any;
 }
 function updateItem(
   setter: React.Dispatch<React.SetStateAction<PRItem[]>>,
