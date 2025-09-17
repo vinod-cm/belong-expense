@@ -312,13 +312,7 @@ function EditPR({
                     <Field label="Total Price *">
                       <Input value={it.total} readOnly />
                     </Field>
-                    <Field label="TDS %">
-                      <PercentCombobox
-                        value={it.tdsRate || ""}
-                        options={["1", "2"]}
-                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
-                      />
-                    </Field>
+
                     <Field label="GST %">
                       <PercentCombobox
                         value={it.gstRate || ""}
@@ -576,13 +570,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     <Field label="Total Price *">
                       <Input value={it.total} readOnly />
                     </Field>
-                    <Field label="TDS %">
-                      <PercentCombobox
-                        value={it.tdsRate || ""}
-                        options={["1", "2"]}
-                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
-                      />
-                    </Field>
+
                     <Field label="GST %">
                       <PercentCombobox
                         value={it.gstRate || ""}
