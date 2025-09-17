@@ -134,8 +134,12 @@ export interface PaymentVoucher {
 }
 
 export interface ExpenseAccount {
-  id: string;
+  id: string; // GL Account No (unique id)
   name: string;
+  groupId?: string;
+  budget?: number;
+  active?: boolean;
+  createdAt?: string;
 }
 
 export interface DebitNote {
