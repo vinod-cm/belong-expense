@@ -318,6 +318,9 @@ function EditPR({
                       <Input value={it.total} readOnly />
                     </Field>
 
+                    <Field label="HSN Code (optional)">
+                      <Input value={(it as any).hsnCode || ""} onChange={(e)=> updateItem(setItems, idx, { hsnCode: e.target.value } as any)} placeholder="HSN" />
+                    </Field>
                     <Field label="GST %">
                       <PercentCombobox
                         value={it.gstRate || ""}
@@ -581,6 +584,9 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                       <Input value={it.total} readOnly />
                     </Field>
 
+                    <Field label="HSN Code (optional)">
+                      <Input value={(it as any).hsnCode || ""} onChange={(e)=> updateItem(setItems, idx, { hsnCode: e.target.value } as any)} placeholder="HSN" />
+                    </Field>
                     <Field label="GST %">
                       <PercentCombobox
                         value={it.gstRate || ""}
