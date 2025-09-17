@@ -128,7 +128,7 @@ export interface PaymentVoucher {
   depositSlipNumber?: string;
   // Optional linkage/context
   prId?: string; // Linked PR when applicable
-  source?: "Invoice" | "PO" | "None"; // Payment source context
+  source?: "Invoice" | "General" | "PO" | "None"; // Payment source context
   invoiceAmounts: PaymentInvoiceAmount[];
   total: number;
 }
