@@ -134,6 +134,7 @@ function EditPR({
   const [title, setTitle] = useState(value.title);
   const [vendorId, setVendorId] = useState(value.vendorId);
   const [requestDate, setRequestDate] = useState(value.requestDate);
+  const [requesterName, setRequesterName] = useState((value as any).requesterName || "");
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>(value.items);
   const { vendors } = useExpense();
@@ -151,6 +152,7 @@ function EditPR({
       title: title.trim(),
       vendorId,
       requestDate,
+      requesterName: requesterName || undefined,
       documentName: document?.name || value.documentName,
       items,
     };
@@ -202,6 +204,9 @@ function EditPR({
                   value={requestDate}
                   onChange={(e) => setRequestDate(e.target.value)}
                 />
+              </Field>
+              <Field label="Requester Name">
+                <Input value={requesterName} onChange={(e)=> setRequesterName(e.target.value)} />
               </Field>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Document</Label>
