@@ -537,6 +537,30 @@ function VendorDialog({
                   </div>
                 </>
               )}
+              <div className="sm:col-span-2 grid gap-2">
+                <Label>Other Documents</Label>
+                <label className="grid h-28 place-items-center rounded-md border-2 border-dashed text-sm text-muted-foreground">
+                  <div className="pointer-events-none select-none text-center">
+                    <div className="font-medium text-foreground">Upload</div>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length) setOtherDocs((s) => [...s, ...files]);
+                    }}
+                  />
+                </label>
+                {otherDocs.length > 0 && (
+                  <ul className="list-disc pl-5 text-sm">
+                    {otherDocs.map((d,i)=> (
+                      <li key={i}>{d.name}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </Section>
 
