@@ -18,6 +18,7 @@ export interface PRItem {
   unitPrice: number;
   total: number;
   description?: string;
+  hsnCode?: string;
   gstRate?: string;
   tdsRate?: string;
   gstAmount?: number;
@@ -29,6 +30,7 @@ export interface PR {
   title: string;
   vendorId: string;
   requestDate: string;
+  requesterName?: string;
   documentName?: string;
   poNumber?: string;
   poDocumentName?: string;
@@ -60,7 +62,8 @@ export interface Vendor {
   state?: string;
   active: boolean;
   legalType?: string;
-  vendorTypeId?: string;
+  vendorCategory?: "Service Based" | "Goods Based" | "Both";
+  serviceType?: string;
   accountType?: string;
   startDate?: string;
   endDate?: string;
@@ -71,7 +74,6 @@ export interface Vendor {
     gstin?: string;
     pan?: string;
     tan?: string;
-    tdsSection?: string;
     tdsRate?: string;
     gstRate?: string;
     msme?: boolean;
@@ -84,6 +86,7 @@ export interface Vendor {
     aadhaarName?: string;
     nonGstDocName?: string;
     msmeDocName?: string;
+    otherDocNames?: string[];
   };
   bank: VendorBank[];
 }
