@@ -15,6 +15,7 @@ export default function PaymentVoucherCreate() {
   const [vendorId, setVendorId] = useState("");
   const [prId, setPrId] = useState("");
   const [mode, setMode] = useState<"UPI" | "Cash" | "Cheque" | "Demand Draft" | "Account Transfer">("UPI");
+  const [vendorBankId, setVendorBankId] = useState("");
   const [pvNo] = useState(() => `PV-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
   const [date, setDate] = useState("");
   const [desc, setDesc] = useState("");
@@ -36,6 +37,7 @@ export default function PaymentVoucherCreate() {
   const vendorApprovedPRs = useMemo(() => prs.filter((p) => p.vendorId === vendorId && p.approved), [prs, vendorId]);
   const prInvoices = useMemo(() => invoices.filter((i) => i.prId === prId), [invoices, prId]);
   const selectedPR = useMemo(() => prs.find((p) => p.id === prId), [prs, prId]);
+  const vendorBanks = useMemo(() => vendors.find((v)=> v.id === vendorId)?.bank || [], [vendors, vendorId]);
 
   const selectedInvoices = useMemo(() => prInvoices.filter((i) => selectedInvoiceIds.includes(i.id)), [prInvoices, selectedInvoiceIds]);
 
@@ -61,11 +63,11 @@ export default function PaymentVoucherCreate() {
       if (amt <= 0) return false;
     }
     if (mode === "UPI" && !transactionNumber) return false;
-    if (mode === "Cheque" && (!transactionBank || !chequeDate || !chequeNumber)) return false;
-    if (mode === "Demand Draft" && (!transactionBank || !ddDate || !depositSlipNumber)) return false;
-    if (mode === "Account Transfer" && (!transactionBank || !transactionNumber)) return false;
+    if (mode === "Cheque" && (!vendorBankId || !transactionBank || !chequeDate || !chequeNumber)) return false;
+    if (mode === "Demand Draft" && (!vendorBankId || !transactionBank || !ddDate || !depositSlipNumber)) return false;
+    if (mode === "Account Transfer" && (!vendorBankId || !transactionBank || !transactionNumber)) return false;
     return total > 0;
-  }, [vendorId, date, payType, prId, selectedInvoiceIds, selectedInvoices, invoiceAmounts, advanceAmount, mode, transactionNumber, transactionBank, chequeDate, chequeNumber, ddDate, depositSlipNumber, total]);
+  }, [vendorId, date, payType, prId, selectedInvoiceIds, selectedInvoices, invoiceAmounts, advanceAmount, mode, vendorBankId, transactionNumber, transactionBank, chequeDate, chequeNumber, ddDate, depositSlipNumber, total]);
 
   const save = () => {
     if (!canSave) return;
@@ -80,7 +82,7 @@ export default function PaymentVoucherCreate() {
       id: `PV-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
       vendorId,
       pvNumber: pvNo,
-      bankAccount: transactionBank,
+      bankAccount: vendorBankId,
       mode,
       date,
       description: desc || undefined,
@@ -128,6 +130,7 @@ export default function PaymentVoucherCreate() {
                       setSelectedInvoiceIds([]);
                       setInvoiceAmounts({});
                       setAdvanceAmount(0);
+                      setVendorBankId("");
                     }}
                   >
                     <SelectTrigger>
@@ -142,10 +145,10 @@ export default function PaymentVoucherCreate() {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Select PR">
+                <Field label="Select PO">
                   <Select value={prId} onValueChange={(v) => { setPrId(v); setSelectedInvoiceIds([]); setInvoiceAmounts({}); setAdvanceAmount(0); setInvoiceToAdd(""); }}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Approved PRs of selected vendor" />
+                      <SelectValue placeholder="Approved POs of selected vendor" />
                     </SelectTrigger>
                     <SelectContent>
                       {vendorApprovedPRs.map((p) => (
@@ -282,6 +285,20 @@ export default function PaymentVoucherCreate() {
                 {(mode === "UPI" || mode === "Account Transfer") && (
                   <Field label="Transaction Number">
                     <Input value={transactionNumber} onChange={(e) => setTransactionNumber(e.target.value)} />
+                  </Field>
+                )}
+                {(mode === "Cheque" || mode === "Demand Draft" || mode === "Account Transfer") && (
+                  <Field label="Vendor Bank Account">
+                    <Select value={vendorBankId} onValueChange={setVendorBankId} disabled={!vendorId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={vendorId ? "Select Vendor Bank" : "Select vendor first"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vendorBanks.map((b)=> (
+                          <SelectItem key={b.id} value={b.id}>{b.bankName} — {b.accNo}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </Field>
                 )}
                 {mode !== "Cash" && (
