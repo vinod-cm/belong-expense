@@ -155,7 +155,7 @@ export default function CreateInvoicePage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {allowedAccounts.map((acc) => (
-                                    <SelectItem key={acc} value={acc}>{acc}</SelectItem>
+                                    <SelectItem key={acc} value={acc}>{useExpense().accounts.find((a)=>a.id===acc)?.name || acc}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
