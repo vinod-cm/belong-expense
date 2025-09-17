@@ -394,6 +394,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const [title, setTitle] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [requestDate, setRequestDate] = useState("");
+  const [requesterName, setRequesterName] = useState("");
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>([emptyItem()]);
   const { vendors } = useExpense();
@@ -412,6 +413,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
       title: title.trim(),
       vendorId,
       requestDate,
+      requesterName: requesterName || undefined,
       documentName: document?.name,
       poNumber: nextPONumber(yr),
       items,
@@ -465,6 +467,9 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                   value={requestDate}
                   onChange={(e) => setRequestDate(e.target.value)}
                 />
+              </Field>
+              <Field label="Requester Name">
+                <Input value={requesterName} onChange={(e)=> setRequesterName(e.target.value)} />
               </Field>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Document *</Label>
