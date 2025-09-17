@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
+import { useExpense } from "@/store/expense";
 
 interface Group {
   id: string;
   name: string;
+  chartOfAccount?: string;
   budget: number; // in currency units
   active: boolean;
   createdAt: string;
@@ -22,7 +24,6 @@ interface ExpenseAccount {
   name: string;
   groupId: string;
   budget: number;
-  hsnSac?: string;
   active: boolean;
   createdAt: string;
 }
@@ -32,7 +33,7 @@ export default function ExpenseSetup() {
   const [query, setQuery] = useState("");
 
   const [groups, setGroups] = useState<Group[]>([]);
-  const [accounts, setAccounts] = useState<ExpenseAccount[]>([]);
+  const { accounts, addAccount, updateAccount, removeAccount } = useExpense();
 
   const filteredGroups = useMemo(
     () =>
@@ -90,8 +91,8 @@ export default function ExpenseSetup() {
             ) : (
               <AddAccountButton
                 groups={groups}
-                accounts={accounts}
-                onSave={(a) => setAccounts((s) => [...s, a])}
+                accounts={accounts as any}
+                onSave={(a) => addAccount(a as any)}
               />
             )}
           </div>
@@ -110,13 +111,11 @@ export default function ExpenseSetup() {
           />
         ) : (
           <AccountsTable
-            items={filteredAccounts}
+            items={filteredAccounts as any}
             groups={groups}
-            onToggle={(id) =>
-              setAccounts((s) => s.map((a) => (a.id === id ? { ...a, active: !a.active } : a)))
-            }
-            onDelete={(id) => setAccounts((s) => s.filter((a) => a.id !== id))}
-            onEdit={(a) => setAccounts((s) => s.map((it) => (it.id === a.id ? a : it)))}
+            onToggle={(id) => updateAccount({ ...(accounts.find(a=>a.id===id) as any), active: !(accounts.find(a=>a.id===id) as any)?.active })}
+            onDelete={(id) => removeAccount(id)}
+            onEdit={(a) => updateAccount(a as any)}
           />
         )}
       </div>
@@ -199,7 +198,6 @@ function AccountsTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>GL Code</TableHead>
-            <TableHead>Hsn Sac Code</TableHead>
             <TableHead>Budget Amount</TableHead>
             <TableHead>Created On</TableHead>
             <TableHead>Status</TableHead>
@@ -212,7 +210,6 @@ function AccountsTable({
             <TableRow key={a.id}>
               <TableCell className="font-medium">{a.name}</TableCell>
               <TableCell>{a.id}</TableCell>
-              <TableCell>{a.hsnSac || "—"}</TableCell>
               <TableCell>₹{a.budget.toLocaleString()}</TableCell>
               <TableCell>{new Date(a.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>
@@ -244,6 +241,7 @@ function AccountsTable({
 function AddGroupButton({ onSave }: { onSave: (g: Group) => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [chart, setChart] = useState("");
   const [budget, setBudget] = useState(0);
   const [active, setActive] = useState(true);
 
@@ -253,6 +251,7 @@ function AddGroupButton({ onSave }: { onSave: (g: Group) => void }) {
     const newGroup: Group = {
       id: randomCode(),
       name: name.trim(),
+      chartOfAccount: chart || undefined,
       budget: Number(budget) || 0,
       active,
       createdAt: now,
@@ -260,6 +259,7 @@ function AddGroupButton({ onSave }: { onSave: (g: Group) => void }) {
     onSave(newGroup);
     setOpen(false);
     setName("");
+    setChart("");
     setBudget(0);
     setActive(true);
   };
@@ -277,6 +277,19 @@ function AddGroupButton({ onSave }: { onSave: (g: Group) => void }) {
           <div className="grid gap-2">
             <Label htmlFor="g-name">Name *</Label>
             <Input id="g-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Chart of Accounts</Label>
+            <Select value={chart} onValueChange={setChart}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {CHART_OF_ACCOUNTS.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="g-budget">Budget Amount *</Label>
@@ -298,12 +311,13 @@ function AddGroupButton({ onSave }: { onSave: (g: Group) => void }) {
 function EditGroupButton({ value, onSave }: { value: Group; onSave: (g: Group) => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(value.name);
+  const [chart, setChart] = useState(value.chartOfAccount || "");
   const [budget, setBudget] = useState<number>(value.budget);
   const [active, setActive] = useState<boolean>(value.active);
 
   const save = () => {
     if (!name.trim()) return;
-    onSave({ ...value, name: name.trim(), budget: Number(budget) || 0, active });
+    onSave({ ...value, name: name.trim(), chartOfAccount: chart || undefined, budget: Number(budget) || 0, active });
     setOpen(false);
   };
 
@@ -320,6 +334,19 @@ function EditGroupButton({ value, onSave }: { value: Group; onSave: (g: Group) =
           <div className="grid gap-2">
             <Label htmlFor={`eg-name-${value.id}`}>Name *</Label>
             <Input id={`eg-name-${value.id}`} value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Chart of Accounts</Label>
+            <Select value={chart} onValueChange={setChart}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {CHART_OF_ACCOUNTS.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <Label htmlFor={`eg-budget-${value.id}`}>Budget Amount *</Label>
@@ -351,7 +378,6 @@ function AddAccountButton({
   const [name, setName] = useState("");
   const [groupId, setGroupId] = useState<string>("");
   const [budget, setBudget] = useState(0);
-  const [hsn, setHsn] = useState("");
   const [active, setActive] = useState(true);
   const [error, setError] = useState<string>("");
 
@@ -373,7 +399,6 @@ function AddAccountButton({
       name: name.trim(),
       groupId,
       budget: Number(budget) || 0,
-      hsnSac: hsn.trim() || undefined,
       active,
       createdAt: now,
     };
@@ -382,7 +407,6 @@ function AddAccountButton({
     setName("");
     setGroupId("");
     setBudget(0);
-    setHsn("");
     setActive(true);
   };
 
@@ -417,10 +441,6 @@ function AddAccountButton({
             <Label htmlFor="ea-budget">Budget Amount *</Label>
             <Input id="ea-budget" value={budget} onChange={(e) => setBudget(Number(e.target.value))} placeholder="Enter Amount" />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="ea-hsn">Hsn Sac Code *</Label>
-            <Input id="ea-hsn" value={hsn} onChange={(e) => setHsn(e.target.value)} placeholder="Enter Code" />
-          </div>
           <div className="flex items-center gap-2">
             <Checkbox id="ea-active" checked={active} onCheckedChange={(v) => setActive(Boolean(v))} />
             <Label htmlFor="ea-active">Active</Label>
@@ -440,12 +460,11 @@ function EditAccountButton({ value, groups, onSave }: { value: ExpenseAccount; g
   const [name, setName] = useState(value.name);
   const [groupId, setGroupId] = useState<string>(value.groupId);
   const [budget, setBudget] = useState<number>(value.budget);
-  const [hsn, setHsn] = useState<string>(value.hsnSac || "");
   const [active, setActive] = useState<boolean>(value.active);
 
   const save = () => {
     if (!name.trim() || !groupId) return;
-    onSave({ ...value, name: name.trim(), groupId, budget: Number(budget) || 0, hsnSac: hsn.trim() || undefined, active });
+    onSave({ ...value, name: name.trim(), groupId, budget: Number(budget) || 0, active });
     setOpen(false);
   };
 
@@ -480,10 +499,6 @@ function EditAccountButton({ value, groups, onSave }: { value: ExpenseAccount; g
             <Label htmlFor={`ea-budget-${value.id}`}>Budget Amount *</Label>
             <Input id={`ea-budget-${value.id}`} value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor={`ea-hsn-${value.id}`}>Hsn Sac Code *</Label>
-            <Input id={`ea-hsn-${value.id}`} value={hsn} onChange={(e) => setHsn(e.target.value)} />
-          </div>
           <div className="flex items-center gap-2">
             <Checkbox id={`ea-active-${value.id}`} checked={active} onCheckedChange={(v) => setActive(Boolean(v))} />
             <Label htmlFor={`ea-active-${value.id}`}>Active</Label>
@@ -497,6 +512,7 @@ function EditAccountButton({ value, groups, onSave }: { value: ExpenseAccount; g
   );
 }
 
+const CHART_OF_ACCOUNTS = ["Assets", "Liabilities", "Equity", "Income", "Expenses"] as const;
 function randomCode() {
   const seq = Math.random().toString(36).slice(2, 6).toUpperCase();
   return seq;

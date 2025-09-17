@@ -134,6 +134,7 @@ function EditPR({
   const [title, setTitle] = useState(value.title);
   const [vendorId, setVendorId] = useState(value.vendorId);
   const [requestDate, setRequestDate] = useState(value.requestDate);
+  const [requesterName, setRequesterName] = useState((value as any).requesterName || "");
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>(value.items);
   const { vendors } = useExpense();
@@ -151,6 +152,7 @@ function EditPR({
       title: title.trim(),
       vendorId,
       requestDate,
+      requesterName: requesterName || undefined,
       documentName: document?.name || value.documentName,
       items,
     };
@@ -203,6 +205,9 @@ function EditPR({
                   onChange={(e) => setRequestDate(e.target.value)}
                 />
               </Field>
+              <Field label="Requester Name">
+                <Input value={requesterName} onChange={(e)=> setRequesterName(e.target.value)} />
+              </Field>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Document</Label>
                 <FileBox onChange={setDocument} />
@@ -240,7 +245,7 @@ function EditPR({
                         <SelectContent>
                           {allExpenseAccounts.map((acc) => (
                             <SelectItem key={acc} value={acc}>
-                              {acc}
+                              {(useExpense().accounts.find((a)=>a.id===acc)?.name || acc)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -312,12 +317,9 @@ function EditPR({
                     <Field label="Total Price *">
                       <Input value={it.total} readOnly />
                     </Field>
-                    <Field label="TDS %">
-                      <PercentCombobox
-                        value={it.tdsRate || ""}
-                        options={["1", "2"]}
-                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
-                      />
+
+                    <Field label="HSN Code (optional)">
+                      <Input value={(it as any).hsnCode || ""} onChange={(e)=> updateItem(setItems, idx, { hsnCode: e.target.value } as any)} placeholder="HSN" />
                     </Field>
                     <Field label="GST %">
                       <PercentCombobox
@@ -395,6 +397,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
   const [title, setTitle] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [requestDate, setRequestDate] = useState("");
+  const [requesterName, setRequesterName] = useState("");
   const [document, setDocument] = useState<File | null>(null);
   const [items, setItems] = useState<PRItem[]>([emptyItem()]);
   const { vendors } = useExpense();
@@ -413,6 +416,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
       title: title.trim(),
       vendorId,
       requestDate,
+      requesterName: requesterName || undefined,
       documentName: document?.name,
       poNumber: nextPONumber(yr),
       items,
@@ -467,6 +471,9 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                   onChange={(e) => setRequestDate(e.target.value)}
                 />
               </Field>
+              <Field label="Requester Name">
+                <Input value={requesterName} onChange={(e)=> setRequesterName(e.target.value)} />
+              </Field>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Document *</Label>
                 <FileBox onChange={setDocument} />
@@ -504,7 +511,7 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                         <SelectContent>
                           {allExpenseAccounts.map((acc) => (
                             <SelectItem key={acc} value={acc}>
-                              {acc}
+                              {(useExpense().accounts.find((a)=>a.id===acc)?.name || acc)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -576,12 +583,9 @@ function CreatePR({ onSave }: { onSave: (p: PR) => void }) {
                     <Field label="Total Price *">
                       <Input value={it.total} readOnly />
                     </Field>
-                    <Field label="TDS %">
-                      <PercentCombobox
-                        value={it.tdsRate || ""}
-                        options={["1", "2"]}
-                        onChange={(v) => updateAndRecalc(setItems, idx, { tdsRate: v })}
-                      />
+
+                    <Field label="HSN Code (optional)">
+                      <Input value={(it as any).hsnCode || ""} onChange={(e)=> updateItem(setItems, idx, { hsnCode: e.target.value } as any)} placeholder="HSN" />
                     </Field>
                     <Field label="GST %">
                       <PercentCombobox
@@ -703,11 +707,10 @@ function emptyItem(): PRItem {
     unitPrice: 0,
     total: 0,
     gstRate: "0",
-    tdsRate: "0",
     gstAmount: 0,
     tdsAmount: 0,
     payable: 0,
-  };
+  } as any;
 }
 function updateItem(
   setter: React.Dispatch<React.SetStateAction<PRItem[]>>,

@@ -18,6 +18,7 @@ export interface PRItem {
   unitPrice: number;
   total: number;
   description?: string;
+  hsnCode?: string;
   gstRate?: string;
   tdsRate?: string;
   gstAmount?: number;
@@ -29,6 +30,7 @@ export interface PR {
   title: string;
   vendorId: string;
   requestDate: string;
+  requesterName?: string;
   documentName?: string;
   poNumber?: string;
   poDocumentName?: string;
@@ -60,7 +62,8 @@ export interface Vendor {
   state?: string;
   active: boolean;
   legalType?: string;
-  vendorTypeId?: string;
+  vendorCategory?: "Service Based" | "Goods Based" | "Both";
+  serviceType?: string;
   accountType?: string;
   startDate?: string;
   endDate?: string;
@@ -71,7 +74,6 @@ export interface Vendor {
     gstin?: string;
     pan?: string;
     tan?: string;
-    tdsSection?: string;
     tdsRate?: string;
     gstRate?: string;
     msme?: boolean;
@@ -84,6 +86,7 @@ export interface Vendor {
     aadhaarName?: string;
     nonGstDocName?: string;
     msmeDocName?: string;
+    otherDocNames?: string[];
   };
   bank: VendorBank[];
 }
@@ -125,9 +128,18 @@ export interface PaymentVoucher {
   depositSlipNumber?: string;
   // Optional linkage/context
   prId?: string; // Linked PR when applicable
-  source?: "Invoice" | "PO" | "None"; // Payment source context
+  source?: "Invoice" | "General" | "PO" | "None"; // Payment source context
   invoiceAmounts: PaymentInvoiceAmount[];
   total: number;
+}
+
+export interface ExpenseAccount {
+  id: string; // GL Account No (unique id)
+  name: string;
+  groupId?: string;
+  budget?: number;
+  active?: boolean;
+  createdAt?: string;
 }
 
 export interface DebitNote {
@@ -152,6 +164,7 @@ interface ExpenseStore {
   invoices: Invoice[];
   vouchers: PaymentVoucher[];
   debitNotes: DebitNote[];
+  accounts: ExpenseAccount[];
   addVendor(v: Vendor): void;
   updateVendor(v: Vendor): void;
   removeVendor(id: string): void;
@@ -163,6 +176,9 @@ interface ExpenseStore {
   addInvoice(inv: Invoice): void;
   addVoucher(v: PaymentVoucher): void;
   addDebitNote(d: DebitNote): void;
+  addAccount(a: ExpenseAccount): void;
+  updateAccount(a: ExpenseAccount): void;
+  removeAccount(id: string): void;
 }
 
 const ExpenseContext = createContext<ExpenseStore | null>(null);
@@ -176,6 +192,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [vouchers, setVouchers] = useState<PaymentVoucher[]>([]);
   const [debitNotes, setDebitNotes] = useState<DebitNote[]>([]);
+  const [accounts, setAccounts] = useState<ExpenseAccount[]>([]);
 
   useEffect(() => {
     try {
@@ -188,14 +205,15 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         setInvoices(data.invoices || []);
         setVouchers(data.vouchers || []);
         setDebitNotes(data.debitNotes || []);
+        setAccounts(data.accounts || []);
       }
     } catch {}
   }, []);
 
   useEffect(() => {
-    const data = { vendors, vendorTypes, prs, invoices, vouchers, debitNotes };
+    const data = { vendors, vendorTypes, prs, invoices, vouchers, debitNotes, accounts };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [vendors, vendorTypes, prs, invoices, vouchers, debitNotes]);
+  }, [vendors, vendorTypes, prs, invoices, vouchers, debitNotes, accounts]);
 
   const value = useMemo<ExpenseStore>(
     () => ({
@@ -205,6 +223,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       invoices,
       vouchers,
       debitNotes,
+      accounts,
       addVendor: (v) => setVendors((s) => [...s, v]),
       updateVendor: (v) =>
         setVendors((s) => s.map((x) => (x.id === v.id ? v : x))),
@@ -219,8 +238,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       addInvoice: (inv) => setInvoices((s) => [...s, inv]),
       addVoucher: (pv) => setVouchers((s) => [...s, pv]),
       addDebitNote: (d) => setDebitNotes((s) => [...s, d]),
+      addAccount: (a) => setAccounts((s) => [...s, a]),
+      updateAccount: (a) => setAccounts((s) => s.map((x) => (x.id === a.id ? a : x))),
+      removeAccount: (id) => setAccounts((s) => s.filter((x) => x.id !== id)),
     }),
-    [vendors, vendorTypes, prs, invoices, vouchers],
+    [vendors, vendorTypes, prs, invoices, vouchers, accounts],
   );
 
   return (

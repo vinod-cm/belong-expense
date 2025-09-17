@@ -51,11 +51,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/expense/vendor-types")}> 
-                      <Link to="/expense/vendor-types">Vendor Types</Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/vendors")}> 
                       <Link to="/vendors">Vendors</Link>
                     </SidebarMenuButton>

@@ -9,7 +9,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ExpenseSetup from "./pages/ExpenseSetup";
-import VendorTypes from "./pages/VendorTypes";
 import Vendors from "./pages/Vendors";
 import VendorDetails from "./pages/VendorDetails";
 import VendorEdit from "./pages/VendorEdit";
@@ -37,7 +36,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/expense/setup" element={<ExpenseSetup />} />
-            <Route path="/expense/vendor-types" element={<VendorTypes />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/:id" element={<VendorDetails />} />
             <Route path="/vendors/:id/edit" element={<VendorEdit />} />
