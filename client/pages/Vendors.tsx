@@ -85,7 +85,7 @@ interface ExpenseAccountOption {
 import { useExpense, Vendor as StoreVendor } from "@/store/expense";
 
 export default function Vendors() {
-  const { vendors, vendorTypes, addVendor, updateVendor, removeVendor } =
+  const { vendors, addVendor, updateVendor, removeVendor } =
     useExpense();
   const [q, setQ] = useState("");
   const expenseOptions = [
@@ -98,8 +98,6 @@ export default function Vendors() {
     [vendors, q],
   );
 
-  const vtName = (id?: string) =>
-    vendorTypes.find((t) => t.id === id)?.name || "—";
 
   return (
     <AppShell>
@@ -129,7 +127,8 @@ export default function Vendors() {
                 <TableHead>Address</TableHead>
                 <TableHead>State</TableHead>
                 <TableHead>Legal Type</TableHead>
-                <TableHead>Vendor Type</TableHead>
+                <TableHead>Vendor Category</TableHead>
+                <TableHead>Service Type</TableHead>
                 <TableHead>Linked Expense Account</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
@@ -148,7 +147,8 @@ export default function Vendors() {
                   </TableCell>
                   <TableCell>{v.state}</TableCell>
                   <TableCell>{v.legalType}</TableCell>
-                  <TableCell>{vtName(v.vendorTypeId)}</TableCell>
+                  <TableCell>{(v as any).vendorCategory || "—"}</TableCell>
+                  <TableCell>{(v as any).serviceType || "—"}</TableCell>
                   <TableCell>
                     {v.expenseAccounts
                       .map(
@@ -230,7 +230,6 @@ function VendorDialog({
   onSubmit: (v: StoreVendor) => void;
   expenseOptions: ExpenseAccountOption[];
 }) {
-  const { vendorTypes } = useExpense();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -239,7 +238,8 @@ function VendorDialog({
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
   const [legalType, setLegalType] = useState("");
-  const [vendorTypeId, setVendorTypeId] = useState("");
+  const [vendorCategory, setVendorCategory] = useState<"Service Based" | "Goods Based" | "Both" | "">("");
+  const [serviceType, setServiceType] = useState("");
   const [accountType, setAccountType] = useState("");
   const [frequency, setFrequency] = useState<"One Time" | "Recurring">("Recurring");
   const [startDate, setStartDate] = useState("");
@@ -252,10 +252,10 @@ function VendorDialog({
   const [nonGstDoc, setNonGstDoc] = useState<File | null>(null);
   const [pan, setPan] = useState("");
   const [tan, setTan] = useState("");
-  const [tdsSection, setTdsSection] = useState("");
   const [isMsme, setIsMsme] = useState(false);
   const [msmeNumber, setMsmeNumber] = useState("");
   const [msmeDoc, setMsmeDoc] = useState<File | null>(null);
+  const [otherDocs, setOtherDocs] = useState<File[]>([]);
 
   const [bank, setBank] = useState<BankAccount[]>([emptyBank()]);
 
@@ -274,7 +274,8 @@ function VendorDialog({
       state: state || undefined,
       active: true,
       legalType: legalType || undefined,
-      vendorTypeId: vendorTypeId || undefined,
+      vendorCategory: (vendorCategory || undefined) as any,
+      serviceType: serviceType || undefined,
       accountType: accountType || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
@@ -285,15 +286,15 @@ function VendorDialog({
         gstin: gstin || undefined,
         pan: pan || undefined,
         tan: tan || undefined,
-        tdsSection: tdsSection || undefined,
         msme: isMsme || undefined,
         msmeNumber: isMsme ? msmeNumber || undefined : undefined,
       },
       documents: {
         nonGstDocName: nonGstDoc?.name,
         msmeDocName: msmeDoc?.name,
+        otherDocNames: otherDocs.map((d)=>d.name),
       },
-      bank,
+      bank: bank.map((b)=> ({ id: b.id, bankName: b.bankName, branch: b.branch, ifsc: b.ifsc, accNo: b.accNo, accHolder: b.accHolder, docName: b.doc?.name })),
     };
     onSubmit(vendor);
     setOpen(false);
@@ -304,7 +305,8 @@ function VendorDialog({
     setAddress("");
     setState("");
     setLegalType("");
-    setVendorTypeId("");
+    setVendorCategory("");
+    setServiceType("");
     setAccountType("");
     setFrequency("Recurring");
     setStartDate("");
@@ -319,6 +321,7 @@ function VendorDialog({
     setIsMsme(false);
     setMsmeNumber("");
     setMsmeDoc(null);
+    setOtherDocs([]);
     setBank([emptyBank()]);
   };
 
@@ -361,20 +364,24 @@ function VendorDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid gap-2">
-                <Label>Vendor Type</Label>
-                <Select value={vendorTypeId} onValueChange={setVendorTypeId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Vendor Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vendorTypes.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid gap-2 sm:grid-cols-2 sm:col-span-2">
+                <div className="grid gap-2">
+                  <Label>Vendor Category</Label>
+                  <Select value={vendorCategory} onValueChange={(v)=>setVendorCategory(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Service Based">Service Based</SelectItem>
+                      <SelectItem value="Goods Based">Goods Based</SelectItem>
+                      <SelectItem value="Both">Both</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Service Type</Label>
+                  <Input value={serviceType} onChange={(e)=>setServiceType(e.target.value)} placeholder="e.g. Consulting" />
+                </div>
               </div>
               <div className="sm:col-span-2 grid gap-2">
                 <Label>Address</Label>
@@ -423,6 +430,10 @@ function VendorDialog({
                     <Field label="Account Number *">
                       <Input value={b.accNo} onChange={(e) => updateBank(setBank, idx, { accNo: e.target.value })} placeholder="Type Here" />
                     </Field>
+                    <div className="sm:col-span-2 grid gap-2">
+                      <Label>Cancelled Cheque Document</Label>
+                      <FileBox onChange={(f)=> updateBank(setBank, idx, { doc: f })} />
+                    </div>
                   </div>
                   <div className="mt-3 flex justify-end gap-2">
                     <Button variant="secondary" onClick={() => setBank((s) => s.filter((_, i) => i !== idx))}>
@@ -503,27 +514,13 @@ function VendorDialog({
                 </div>
               )}
               <Field label="PAN Number">
-                <Input value={pan} onChange={(e) => setPan(e.target.value)} />
+                <Input value={pan} onChange={(e) => { const val = e.target.value; setPan(val); const t = deriveLegalType(val); setLegalType(t); }} />
+              </Field>
+              <Field label="Legal Type (auto)">
+                <Input readOnly value={legalType} />
               </Field>
               <Field label="TAN Number">
                 <Input value={tan} onChange={(e) => setTan(e.target.value)} />
-              </Field>
-              <Field label="TDS Section Code">
-                <Input value={tdsSection} onChange={(e) => setTdsSection(e.target.value)} />
-              </Field>
-              <Field label="Vendor Legal Type *">
-                <Select value={legalType} onValueChange={setLegalType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEGAL_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </Field>
               <div className="flex items-center gap-2">
                 <Checkbox id="v-msme" checked={isMsme} onCheckedChange={(v) => setIsMsme(Boolean(v))} />
@@ -600,7 +597,12 @@ function generateId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-const LEGAL_TYPES = ["Company", "Non-Company", "Professional"] as const;
+function deriveLegalType(pan: string) {
+  const c = (pan || "").toUpperCase()[3];
+  if (c === "C") return "Company";
+  if (!c) return "";
+  return "Non-Company";
+}
 const ACCOUNT_TYPES = ["Current", "Savings", "Expense"] as const;
 const STATES = [
   "Andhra Pradesh",
