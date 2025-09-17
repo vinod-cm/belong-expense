@@ -85,13 +85,10 @@ interface ExpenseAccountOption {
 import { useExpense, Vendor as StoreVendor } from "@/store/expense";
 
 export default function Vendors() {
-  const { vendors, addVendor, updateVendor, removeVendor } =
+  const { vendors, addVendor, updateVendor, removeVendor, accounts } =
     useExpense();
   const [q, setQ] = useState("");
-  const expenseOptions = [
-    { id: "ACC1", name: "Account 1" },
-    { id: "ACC2", name: "Account 2" },
-  ];
+  const expenseOptions = useMemo(() => accounts.map((a)=>({ id: a.id, name: a.name })), [accounts]);
 
   const filtered = useMemo(
     () => vendors.filter((v) => v.name.toLowerCase().includes(q.toLowerCase())),
