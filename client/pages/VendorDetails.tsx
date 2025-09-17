@@ -47,7 +47,7 @@ export default function VendorDetails() {
                   <Field label="Email" value={v.email} />
                   <Field label="Phone" value={v.phone} />
                   <Field label="State" value={v.state} />
-                  <Field label="Vendor Type" value={v.vendorTypeId} />
+                  <Field label="Vendor Category" value={(v as any).vendorCategory} />
                   <Field label="Legal Type" value={v.legalType} />
                   <div className="sm:col-span-3">
                     <Field label="Address" value={v.address} />
@@ -64,7 +64,6 @@ export default function VendorDetails() {
                   <Field label="GSTIN" value={v.compliance?.gstin} />
                   <Field label="PAN" value={v.compliance?.pan} />
                   <Field label="TAN" value={v.compliance?.tan} />
-                  <Field label="TDS Section" value={v.compliance?.tdsSection} />
                   <Field label="TDS Rate" value={v.compliance?.tdsRate} />
                   <Field label="GST Rate" value={v.compliance?.gstRate} />
                 </div>

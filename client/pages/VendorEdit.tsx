@@ -20,7 +20,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function VendorEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { vendors, vendorTypes, updateVendor } = useExpense();
+  const { vendors, updateVendor } = useExpense();
   const initial = useMemo(() => vendors.find((x) => x.id === id), [vendors, id]);
 
   const [name, setName] = useState("");
@@ -31,7 +31,8 @@ export default function VendorEdit() {
   const [state, setState] = useState("");
   const [active, setActive] = useState(true);
   const [legalType, setLegalType] = useState("");
-  const [vendorTypeId, setVendorTypeId] = useState("");
+  const [vendorCategory, setVendorCategory] = useState<"Service Based"|"Goods Based"|"Both"|"">("");
+  const [serviceType, setServiceType] = useState("");
   const [accountType, setAccountType] = useState("");
   const [oneTime, setOneTime] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -47,7 +48,8 @@ export default function VendorEdit() {
     setState(initial.state || "");
     setActive(initial.active ?? true);
     setLegalType(initial.legalType || "");
-    setVendorTypeId(initial.vendorTypeId || "");
+    setVendorCategory((initial as any).vendorCategory || "");
+    setServiceType((initial as any).serviceType || "");
     setAccountType((initial as any).accountType || "");
     setOneTime(initial.oneTime ?? false);
     setStartDate(initial.startDate || "");
@@ -67,7 +69,8 @@ export default function VendorEdit() {
       state: state || undefined,
       active,
       legalType: legalType || undefined,
-      vendorTypeId: vendorTypeId || undefined,
+      vendorCategory: vendorCategory || undefined as any,
+      serviceType: serviceType || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       oneTime,
@@ -121,19 +124,20 @@ export default function VendorEdit() {
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Vendor Type">
-                    <Select value={vendorTypeId} onValueChange={setVendorTypeId}>
+                  <Field label="Vendor Category">
+                    <Select value={vendorCategory} onValueChange={(v)=>setVendorCategory(v as any)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Vendor Type" />
+                        <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vendorTypes.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Service Based">Service Based</SelectItem>
+                        <SelectItem value="Goods Based">Goods Based</SelectItem>
+                        <SelectItem value="Both">Both</SelectItem>
                       </SelectContent>
                     </Select>
+                  </Field>
+                  <Field label="Service Type">
+                    <Input value={serviceType} onChange={(e)=>setServiceType(e.target.value)} />
                   </Field>
                   <Field label="Account Type">
                     <Select value={accountType} onValueChange={setAccountType}>

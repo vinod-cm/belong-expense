@@ -19,13 +19,6 @@ export default function Index() {
             action="Open"
           />
           <FeatureCard
-            title="Vendor Types"
-            description="Define and manage vendor categories"
-            icon={<Users className="h-5 w-5" />}
-            to="/expense/vendor-types"
-            action="Manage"
-          />
-          <FeatureCard
             title="Purchase Workflow"
             description="Create and track PRs"
             icon={<FileText className="h-5 w-5" />}
