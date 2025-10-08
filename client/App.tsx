@@ -21,6 +21,8 @@ import PurchaseRequestDetails from "./pages/PurchaseRequestDetails";
 import DebitNoteCreate from "./pages/DebitNoteCreate";
 import CreateInvoicePage from "./pages/CreateInvoice";
 import Placeholder from "./pages/Placeholder";
+import GSTInputLedger from "./pages/GSTInputLedger";
+import TDSPayableLedger from "./pages/TDSPayableLedger";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,8 @@ const App = () => (
             <Route path="/expense/payment" element={<PaymentVoucherPage />} />
             <Route path="/expense/payment/create" element={<PaymentVoucherCreate />} />
             <Route path="/expense/payment/:id" element={<PaymentVoucherDetails />} />
+            <Route path="/gst-input-ledger" element={<GSTInputLedger />} />
+            <Route path="/tds-payable-ledger" element={<TDSPayableLedger />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
