@@ -105,7 +105,7 @@ export default function TDSPayableLedger() {
               setOpen(v);
             }}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="min-w[260px] justify-between">
+                <Button variant="outline" className="min-w-[260px] justify-between">
                   <span className="inline-flex items-center gap-2 text-sm">
                     <CalendarIcon className="h-4 w-4" /> {label}
                   </span>
