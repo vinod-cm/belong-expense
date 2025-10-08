@@ -283,7 +283,6 @@ export default function TDSPayableLedger() {
                     <TableRow>
                       <TableHead>Month</TableHead>
                       <TableHead className="text-right">Total TDS Payable</TableHead>
-                      <TableHead className="text-right">Total TDS Paid</TableHead>
                       <TableHead className="text-right">Outstanding TDS</TableHead>
                       <TableHead>Due Date</TableHead>
                       <TableHead>Status</TableHead>
@@ -297,7 +296,6 @@ export default function TDSPayableLedger() {
                         <TableRow key={r.id}>
                           <TableCell className="font-medium">{r.monthLabel}</TableCell>
                           <TableCell className="text-right tabular-nums">{rupee(r.payable)}</TableCell>
-                          <TableCell className="text-right tabular-nums">{rupee(r.paid)}</TableCell>
                           <TableCell className="text-right tabular-nums">{rupee(outstanding)}</TableCell>
                           <TableCell>{r.dueDate}</TableCell>
                           <TableCell>
@@ -334,7 +332,6 @@ export default function TDSPayableLedger() {
                     <TableRow>
                       <TableCell className="font-semibold">Total</TableCell>
                       <TableCell className="text-right font-semibold tabular-nums">{rupee(totals.payable)}</TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">{rupee(totals.paid)}</TableCell>
                       <TableCell className="text-right font-semibold tabular-nums">{rupee(outstandingTotal)}</TableCell>
                       <TableCell colSpan={3}></TableCell>
                     </TableRow>
