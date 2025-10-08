@@ -1,10 +1,14 @@
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import React from "react";
+import type { DateRange } from "react-day-picker";
 
 type Entry = {
   postedDate: string; // ISO date or any parsable string
@@ -28,8 +32,9 @@ export default function GSTInputLedger() {
     return d;
   }, []);
 
-  const [startDate, setStartDate] = React.useState<string>(startOfMonth.toISOString().slice(0, 10));
-  const [endDate, setEndDate] = React.useState<string>(today.toISOString().slice(0, 10));
+  const [range, setRange] = React.useState<DateRange | undefined>({ from: startOfMonth, to: today });
+  const [open, setOpen] = React.useState(false);
+  const [pending, setPending] = React.useState<DateRange | undefined>(range);
 
   const allEntries = React.useMemo<Entry[]>(() => {
     return [
@@ -46,64 +51,91 @@ export default function GSTInputLedger() {
   }, []);
 
   const filtered = React.useMemo(() => {
-    const s = startDate ? new Date(startDate) : null;
-    const e = endDate ? new Date(endDate) : null;
+    const s = range?.from ? new Date(range.from) : null;
+    const e = range?.to ? new Date(range.to) : null;
     return allEntries.filter((it) => {
-      if (!it.postedDate) return true; // opening balance row
+      if (!it.postedDate) return true;
       const d = new Date(it.postedDate);
       if (s && d < new Date(s.getFullYear(), s.getMonth(), s.getDate())) return false;
       if (e && d > new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999)) return false;
       return true;
     });
-  }, [allEntries, startDate, endDate]);
+  }, [allEntries, range]);
 
   const [displayed, setDisplayed] = React.useState(filtered);
   React.useEffect(() => setDisplayed(filtered), [filtered]);
 
-  const onFilter = () => setDisplayed(filtered);
+  const formatDate = (d?: Date) => (d ? d.toLocaleDateString() : "Start Date");
+  const label = `${range?.from ? formatDate(range.from) : "Start Date"} - ${range?.to ? formatDate(range.to) : "End Date"}`;
 
   let running = 0;
 
   return (
     <AppShell>
       <div className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex-1" />
-          <h1 className="text-xl font-semibold text-center">GST Input Ledger</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Expense</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>GST Input Ledger</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
           <div className="ml-auto flex items-center gap-2">
+            <Popover open={open} onOpenChange={(v) => {
+              if (v) {
+                setPending(range);
+              } else {
+                setRange(pending);
+              }
+              setOpen(v);
+            }}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="min-w-[260px] justify-between">
+                  <span className="inline-flex items-center gap-2 text-sm">
+                    <CalendarIcon className="h-4 w-4" /> {label}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-70" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" align="end">
+                <div className="mb-3 flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPending({ from: new Date(today.getFullYear(), today.getMonth(), 1), to: today })}>This Month</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const last = new Date(today.getFullYear(), today.getMonth(), 0);
+                    setPending({ from: first, to: last });
+                  }}>Last Month</Button>
+                  <Button size="sm" onClick={() => setPending(pending)}>Custom</Button>
+                </div>
+                <Calendar
+                  mode="range"
+                  numberOfMonths={2}
+                  selected={pending}
+                  onSelect={(r) => setPending(r)}
+                  defaultMonth={pending?.from || new Date()}
+                />
+              </PopoverContent>
+            </Popover>
             <Button
               variant="outline"
-              onClick={() => toast({ title: "Export as PDF", description: "Export will be integrated later." })}
+              onClick={() => toast({ title: "Export PDF", description: "Export will be integrated later." })}
             >
-              Export as PDF
+              Export PDF
             </Button>
-            <Button
-              onClick={() => toast({ title: "Export as Excel", description: "Export will be integrated later." })}
-            >
-              Export as Excel
+            <Button onClick={() => toast({ title: "Export Excel", description: "Export will be integrated later." })}>
+              Export Excel
             </Button>
           </div>
         </div>
-
-        <div className="mt-1 text-center text-sm text-muted-foreground">
-          Period: {startDate ? new Date(startDate).toLocaleDateString() : "—"} - {endDate ? new Date(endDate).toLocaleDateString() : "—"}
-        </div>
-
-        <section className="mt-6 rounded-lg border bg-white p-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
-            <div className="grid gap-2 sm:col-span-2">
-              <Label>Start Date</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </div>
-            <div className="grid gap-2 sm:col-span-2">
-              <Label>End Date</Label>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </div>
-            <div className="flex items-end">
-              <Button className="w-full" onClick={onFilter}>Filter</Button>
-            </div>
-          </div>
-        </section>
 
         <section className="mt-6 rounded-lg border bg-white p-3">
           <Table>
