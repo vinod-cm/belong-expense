@@ -257,17 +257,6 @@ export default function TDSPayableLedger() {
             <section className="mt-4 rounded-lg border bg-white p-3">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-base font-semibold">TDS Payable – Monthly Summary</h2>
-                <div className="ml-auto shrink-0 space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => toast({ title: "Export PDF", description: "Export will be integrated later." })}
-                  >
-                    Export PDF
-                  </Button>
-                  <Button onClick={() => toast({ title: "Export Excel", description: "Export will be integrated later." })}>
-                    Export Excel
-                  </Button>
-                </div>
               </div>
 
               <div className="mt-4 grid gap-2 sm:max-w-xs">
