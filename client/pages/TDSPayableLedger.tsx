@@ -201,15 +201,19 @@ export default function TDSPayableLedger() {
                 </PopoverContent>
               </Popover>
             )}
-            <Button
-              variant="outline"
-              onClick={() => toast({ title: "Export PDF", description: "Export will be integrated later." })}
-            >
-              Export PDF
-            </Button>
-            <Button onClick={() => toast({ title: "Export Excel", description: "Export will be integrated later." })}>
-              Export Excel
-            </Button>
+            {tab === "ledger" && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Export PDF", description: "Export will be integrated later." })}
+                >
+                  Export PDF
+                </Button>
+                <Button onClick={() => toast({ title: "Export Excel", description: "Export will be integrated later." })}>
+                  Export Excel
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
