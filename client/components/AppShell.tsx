@@ -66,6 +66,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/gst-input-ledger")}>
+                      <Link to="/gst-input-ledger">GST Input Ledger</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/tds-payable-ledger")}>
+                      <Link to="/tds-payable-ledger">TDS Payable Ledger</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/expense/payment")}>
                       <Link to="/expense/payment">Payment Workflow</Link>
                     </SidebarMenuButton>
